@@ -18,7 +18,6 @@ from utils import *
 class Softonic:
     def __init__(self) -> None:
 
-        self.__file = File()
         self.__parser = Parser()
         self.__executor = ThreadPoolExecutor(max_workers=10)
 
@@ -57,77 +56,6 @@ class Softonic:
         ...
 
 
-    def __create_dir(self, raw_data: dict) -> str:
-        try: os.makedirs(f'{self.MAIN_PATH}/data_raw/data_review_app/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json/detail')
-        except Exception: ...
-        finally: return f'{self.MAIN_PATH}/data_raw/data_review_app/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json'
-        ...
-
-
-    def __logging(self,
-                total: int, 
-                failed: int, 
-                success: int,
-                id_product: int,
-                sub_source: str,
-                id_review: int,
-                status_runtime: str,
-                status_conditions: str,
-                type_error: str,
-                message: str):
-
-        uid_found = False
-        MONITORING_DATA = 'logs/monitoring_gofood.json'
-        MONITORING_LOG = 'logs/monitoring_logs.json'
-
-        content = {
-            "Crawlling_time": strftime('%Y-%m-%d %H:%M:%S'),
-            "id_project": None,
-            "project": "Data Intelligence",
-            "sub_project": "data review",
-            "source_name": "gofood.co.id",
-            "sub_source_name": sub_source,
-            "id_sub_source": id_product,
-            "total_data": total,
-            "total_success": success,
-            "total_failed": failed,
-            "status": status_conditions,
-            "assign": "Rio"
-        }
-
-        monitoring = {
-            "Crawlling_time": strftime('%Y-%m-%d %H:%M:%S'),
-            "id_project": None,
-            "project": "Data Intelligence",
-            "sub_project": "data review",
-            "source_name": "en.softonic.com",
-            "sub_source_name": sub_source,
-            "id_sub_source": id_product,
-            "id_data": id_review,
-            "process_name": "Crawling",
-            "status": status_runtime,
-            "type_error": type_error,
-            "message": message,
-            "assign": "Rio"
-        }
-
-        for index, data in enumerate(self.__datas):
-            if id_product in data["id_sub_source"]:
-                self.__datas[index]["total_data"] = total
-                self.__datas[index]["total_success"] = success
-                self.__datas[index]["total_failed"] = failed
-                self.__datas[index]["status"] = status_conditions
-                uid_found = True
-                break
-
-        if not uid_found:
-            self.__datas.append(content)
-
-        self.__monitorings.append(monitoring)
-        Logs.write(MONITORING_DATA, self.__datas)
-        Logs.write(MONITORING_LOG, self.__monitorings)
-
-
     def __retry(self, url: str, 
                 retry_interval: int = 10) -> Response:
 
@@ -157,24 +85,6 @@ class Softonic:
                 retry_interval+=5
                 ...
         ...
-
-
-    def __convert_path(self, path: str) -> str:
-        
-        path = path.split('/')
-        path[1] = 'data_clean'
-        return '/'.join(path)
-        ...
-
-
-    def __convert_time(self, times: str) -> int:
-        dt = date.datetime.fromisoformat(times)
-        dt = dt.replace(tzinfo=timezone.utc) 
-
-        return int(dt.timestamp())
-        ...
-
-
     def __param_second_cursor(self, cursor: str, thread: str) -> str:
 
         return f'https://disqus.com/api/3.0/threads/listPostsThreaded?limit=50&thread={thread}&forum=en-softonic-com&order=popular&cursor={cursor}&api_key={self.API_KEY}'
