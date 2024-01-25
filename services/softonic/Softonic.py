@@ -12,25 +12,33 @@ from requests_html import HTMLSession
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, wait
 from zlib import crc32
+from dotenv import *
 
+from server.s3 import ConnectionS3
 from library import SoftonicLibs
-
 from utils import *
+
 
 class Softonic:
     def __init__(self) -> None:
-
-        self.__logging = Logs()
+        load_dotenv()
+        self.__logs = Logs(path_monitoring='logs/softonic/monitoring_data.json',
+                            path_log='logs/softonic/monitoring_logs.json',
+                            domain='en.softonic.com')
+        
         self.__executor = ThreadPoolExecutor(max_workers=10)
         self.__softonic = SoftonicLibs()
-
-        self.__datas: List[dict] = []
-        self.__monitorings: List[dict] = []
+        self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
+                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
+                                 endpoint_url=os.getenv('ENDPOINT'),
+                                 )
+        
+        ic(os.getenv('ACCESS_KEY_ID'))
+        ic(os.getenv('SECRET_ACCESS_KEY'))
+        ic()
+        self._bucket = os.getenv('BUCKET')
         self.logs: List[dict] = []
-
-        self.PIC = 'Rio Dwi Saputra'
-        self.MAIN_PATH = 'data'
-        self.platform = ''
+        self.__api = ApiRetry()
 
         self.MAIN_DOMAIN = 'en.softonic.com'
         self.MAIN_URL = 'https://en.softonic.com/'
@@ -59,7 +67,7 @@ class Softonic:
         url_game = raw_game["url_game"]
 
         ... # mengambil Header baku
-        response = self.__retry(url=url_game)
+        response = self.__api.retry(url=url_game, action='get', refresh=self.MAIN_URL)
         headers = PyQuery(response.text)
 
         descriptions = headers.find('article.editor-review')
@@ -96,86 +104,28 @@ class Softonic:
                 }
             )
 
-        ... 
+        ... # menulis detail
+        details: dict = self.__softonic.write_detail(headers=raw_game, detail_game=detail_game)
+        self.__s3.upload(key=details["path_detail"], 
+                         body=details["data_detail"], 
+                         bucket=self._bucket)
 
-        ... # Write only detail
-
-
-        raw_game["reviews_name"] = detail_game["title"]
-        ic(raw_game["reviews_name"])
-
-        path_detail = f'{self.__create_dir(raw_game)}/detail/{vname(detail_game["title"])}.json'
-
-        raw_game.update({
-            "detail_applications": detail_game,
-            "path_data_raw": path_detail,
-            "path_data_clean": self.__convert_path(path_detail)
-        })
-
-        self.__file.write_json(path_detail, raw_game)
         ...
 
-        ... # request to comments param
+        reviews: dict = self.__softonic.get_reviews(url_game)
 
-        response = self.__retry(url=f'{url_game}/comments')
-        html = PyQuery(response.text)
-
-        game_title = html.find('head > title:first-child')
-        ...
-
-        ... # extract disqus review
-
-        response = self.__retry(url=self.__build_param_disqus(name_apk=game_title, url_apk=url_game))
-
-        disqus_page = PyQuery(response.text)
-        reviews_temp = json.loads(disqus_page.find('#disqus-threadData').text())
-
-        all_reviews = []
-        total_error = 0
-
-        ic(len(reviews_temp["response"]["posts"]))
-
-        for review in reviews_temp["response"]["posts"]:
-            
-            all_reviews.append(review)
-
-        try:
-            cursor = reviews_temp["cursor"]["next"]
-            thread = reviews_temp["response"]["posts"][0]["thread"]
-
-            while True:
-
-                reviews = self.__retry(url=self.__param_second_cursor(
-                    thread=thread,
-                    cursor=cursor)).json()
-
-                if not reviews["cursor"]["hasNext"]: break
-                
-                if response.status_code != 200:
-                    total_error+=1
-                    break
-
-                cursor = reviews["cursor"]["next"]
-                logger.info(f'cursor: {cursor}')
-
-
-                for review in reviews["response"]:
-                    all_reviews.append(review)
-
-        except Exception as err:
-            ...
-
-        ic(len(all_reviews))
+        ic('=============================')
+        ic(len(reviews["all_reviews"]))
 
         temporarys = []
-        for index, review in enumerate(all_reviews):
+        for index, review in enumerate(reviews["all_reviews"]):
             
             ... # Logging
-            self.__logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
+            self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
                            id_review=review["id"],
                            status_conditions='on progress',
                            status_runtime='success',
-                           total=len(all_reviews),
+                           total=len(reviews["all_reviews"]),
                            success=index,
                            failed=0,
                            sub_source=detail_game["title"],
@@ -199,15 +149,15 @@ class Softonic:
                     "username_reviews": review["author"]["name"],
                     "image_reviews": 'https:'+review["author"]["avatar"]["permalink"],
                     "created_time": review["createdAt"].replace('T', ' '),
-                    "created_time_epoch": self.__convert_time(review["createdAt"]),
+                    "created_time_epoch": convert_time(review["createdAt"]),
                     "email_reviews": None,
                     "company_name": None,
                     "location_reviews": None,
                     "title_detail_reviews": None,
 
-                    "total_reviews": len(all_reviews),
+                    "total_reviews": len(reviews["all_reviews"]),
                     "reviews_rating": {
-                        "total_rating": PyQuery(html.find('div.rating-info')[0]).text(),
+                        "total_rating": PyQuery(reviews["html"].find('div.rating-info')[0]).text(),
                         "detail_total_rating": None
                     },
                     "detail_reviews_rating": [
@@ -222,24 +172,24 @@ class Softonic:
                     "content_reviews": PyQuery(review["raw_message"]).text(),
                     "reply_content_reviews": [],
                     "date_of_experience": review["createdAt"].replace('T', ' '),
-                    "date_of_experience_epoch": self.__convert_time(review["createdAt"])
+                    "date_of_experience_epoch": convert_time(review["createdAt"])
                 }
 
-                path = f'{self.__create_dir(raw_data=raw_game)}/{detail_review["id"]}.json'
-
+                path = f'{self.__softonic.create_dir(raw_data=raw_game, main_path="data")}/{detail_review["id"]}.json'
 
                 raw_game.update({
                     "detail_reviews": detail_review,
                     "detail_applications": detail_game,
                     "reviews_name": detail_game["title"],
                     "path_data_raw": path,
-                    "path_data_clean": self.__convert_path(path),
+                    "path_data_clean": convert_path(path),
                 })
 
-                self.__file.write_json(path=path, content=raw_game)
+                self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
+                # File.write_json(path=path, content=raw_game)
 
-
-        if total_error:    
+                
+        if reviews["total_error"]:    
             message="failed request to api review"
             type_error="request failed"
             runtime = 'error'
@@ -248,51 +198,32 @@ class Softonic:
             runtime = 'success'
             type_error = None
 
-        self.__logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
-                        id_review=review["id"],
-                        status_conditions=runtime,
-                        status_runtime='error',
-                        total=len(all_reviews),
-                        success=len(all_reviews),
-                        failed=total_error,
+        self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
+                        id_review=None,
+                        status_conditions='done',
+                        status_runtime=runtime,
+                        total=len(reviews["all_reviews"]),
+                        success=len(reviews["all_reviews"]),
+                        failed=reviews["total_error"],
                         sub_source=detail_game["title"],
                         message=message,
                         type_error=type_error)
     
 
-        for detail in temporarys:
-
-            raw_game.update({
-                "detail_reviews": detail,
-                "detail_applications": detail_game,
-                "reviews_name": detail_game["title"],
-            })
-
-            path = f'{self.__create_dir(raw_data=raw_game)}/{detail["id"]}.json'
-
-            raw_game.update({
-                "path_data_raw": path,
-                "path_data_clean": self.__convert_path(path),
-            })
-
-            self.__file.write_json(path=path, content=raw_game)
-
         ic({
-            "len all review": len(all_reviews),
-            "len temp": len(temporarys),
-            "find review": len(reviews_temp["response"]["posts"])
+            "len all review": len(reviews["all_reviews"])
         })
 
         logger.info(f'application: {raw_game["url_game"]}')
         logger.info(f'category: {raw_game["categories"]}')
         logger.info(f'type: {raw_game["type"]}')
-        logger.info(f'total review: {len(all_reviews)}')
+        logger.info(f'total review: {len(reviews["all_reviews"])}')
 
         ...
 
     def __extract_game(self, url_game: str) -> None:
         ic(url_game)
-        response = self.__retry(url=url_game["url"].replace('/comments', ''))
+        response = self.__api.retry(url=url_game["url"].replace('/comments', ''), action='get', refresh=self.MAIN_URL)
 
         results_header = {
             "link": self.MAIN_URL,
@@ -338,10 +269,10 @@ class Softonic:
 
                         ic(igredation)
                         
-                        # self.__extract_game(game)
-                        task_executor.append(self.__executor.submit(self.__extract_game, igredation))
+                        self.__extract_game(igredation)
+                        # task_executor.append(self.__executor.submit(self.__extract_game, igredation))
                         ...
-                    wait(task_executor)
+                    # wait(task_executor)
                     ...
                 ...
             ...

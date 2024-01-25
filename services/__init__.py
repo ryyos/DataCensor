@@ -1,0 +1,1 @@
+from .softonic.Softonic import Softonic

@@ -1,3 +1,5 @@
+import json
+import os
 
 from typing import List
 from icecream import ic
@@ -25,7 +27,7 @@ class SoftonicLibs:
         ...
 
     def collect_games(self, url: str):
-        response = self.__retry(url=url)
+        response = self.__api.retry(url=url, action='get')
         
         games = []
         page = 1
@@ -34,7 +36,7 @@ class SoftonicLibs:
 
             for game in html.find('a[data-meta="app"]'): games.append(PyQuery(game).attr('href'))
 
-            response: Response = self.__retry(url=f'{url}/{page}')
+            response: Response = self.__api.retry(url=f'{url}/{page}', action='get')
 
             if page > 1 and response.history: break
 
@@ -51,12 +53,91 @@ class SoftonicLibs:
         ...
     
 
-    def __param_second_cursor(self, cursor: str, thread: str) -> str:
+    def param_second_cursor(self, cursor: str, thread: str) -> str:
 
-        return f'https://disqus.com/api/3.0/threads/listPostsThreaded?limit=50&thread={thread}&forum=en-softonic-com&order=popular&cursor={cursor}&api_key={self.API_KEY}'
+        return f'https://disqus.com/api/3.0/threads/listPostsThreaded?limit=20&thread={thread}&forum=en-softonic-com&order=popular&cursor={cursor}&api_key={self.API_KEY}'
         ...
 
 
-    def __build_param_disqus(self, url_apk: str, name_apk: str) -> str:
+    def build_param_disqus(self, url_apk: str, name_apk: str) -> str:
         return f'{self.DISQUS_API_COMMENT}/?base=default&f=en-softonic-com&t_u={url_apk}/comments&t_d={name_apk}&s_o=default#version=cb3f36bfade5c758ef967a494d077f95'
         ...
+    def create_dir(self, raw_data: dict, main_path: str) -> str:
+        try: os.makedirs(f'{main_path}/data_raw/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json/detail')
+        except Exception: ...
+        finally: return f'{main_path}/data_raw/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json'
+        ...
+
+    def get_reviews(self, url_game: str):
+
+        response = self.__api.retry(url=f'{url_game}/comments', action='get')
+        html = PyQuery(response.text)
+
+        game_title = html.find('head > title:first-child')
+        ic(self.build_param_disqus(name_apk=game_title, url_apk=url_game))
+        ic(game_title)
+        ...
+
+        ... # extract disqus review
+
+        response = self.__api.retry(url=self.build_param_disqus(name_apk=game_title, url_apk=url_game), action='get')
+
+        disqus_page = PyQuery(response.text)
+        reviews_temp = json.loads(disqus_page.find('#disqus-threadData').text())
+
+        all_reviews = []
+        total_error = 0
+
+        ic(len(reviews_temp["response"]["posts"]))
+
+        for review in reviews_temp["response"]["posts"]:
+            
+            all_reviews.append(review)
+
+        try:
+            cursor = reviews_temp["cursor"]["next"]
+            thread = reviews_temp["response"]["posts"][0]["thread"]
+
+            while True:
+
+                reviews = self.__api.retry(url=self.param_second_cursor(thread=thread,cursor=cursor), action='get').json()
+
+                if not reviews["cursor"]["hasNext"]: break
+                
+                if response.status_code != 200:
+                    total_error+=1
+                    break
+
+                cursor = reviews["cursor"]["next"]
+                logger.info(f'cursor: {cursor}')
+
+
+                for review in reviews["response"]:
+                    all_reviews.append(review)
+
+        except Exception as err:
+            ...
+
+        return {
+            "all_reviews": all_reviews,
+            "html": html,
+            "total_error": total_error
+        }
+
+    def write_detail(self, headers: dict, detail_game: dict):
+        headers["reviews_name"] = detail_game["title"]
+        ic(headers["reviews_name"])
+
+        path_detail = f'{self.create_dir(raw_data=headers, main_path="data")}/detail/{vname(detail_game["title"])}.json'
+
+        headers.update({
+            "detail_applications": detail_game,
+            "path_data_raw": path_detail,
+            "path_data_clean": convert_path(path_detail)
+        })
+
+        # File.write_json(path_detail, headers)
+        return {
+            "path_detail": path_detail,
+            "data_detail": headers
+        }

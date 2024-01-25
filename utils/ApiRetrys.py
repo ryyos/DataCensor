@@ -11,11 +11,14 @@ class ApiRetry:
     def __init__(self) -> None:
         self.__faker = FakeUserAgent(browsers='chrome', os='windows')
         self.__sessions = Session()
+
+        self.RESPONSE_CODE = [200, 400, 404, 500]
     
     def retry(self, url: str, 
                 action: str, 
                 payload: dict = None, 
                 retry_interval: int = 1,
+                refresh: str = None
                 ):
 
 
@@ -37,7 +40,7 @@ class ApiRetry:
                         if response.status_code in self.RESPONSE_CODE: return response
                         if response.status_code == 403:
                             ic(response.text)
-                            self.__sessions.get(url=self.MAIN_URL, headers={'User-Agent': self.__faker.random})
+                            self.__sessions.get(url=refresh, headers={'User-Agent': self.__faker.random})
 
 
                         sleep(retry_interval)
@@ -82,7 +85,7 @@ class ApiRetry:
                         if response.status_code in self.RESPONSE_CODE: return response
                         if response.status_code == 403: 
                             ic(response.text)
-                            self.__sessions.get(url=self.MAIN_URL, headers={"User-Agent": self.__faker.random})
+                            self.__sessions.get(url=refresh, headers={"User-Agent": self.__faker.random})
 
                         logger.warning(f'retry interval: {retry_interval}')
                         logger.warning(f'retry to: {retry}')
