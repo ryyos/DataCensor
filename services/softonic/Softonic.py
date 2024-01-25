@@ -13,11 +13,7 @@ from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, wait
 from zlib import crc32
 
-from src.utils.fileIO import File
-from src.utils.logger import logger
-from src.utils.Logs import Logs
-from src.utils.parser import Parser
-from src.utils.corrector import vname
+from utils import *
 
 class Softonic:
     def __init__(self) -> None:
