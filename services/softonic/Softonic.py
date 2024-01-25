@@ -13,13 +13,16 @@ from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, wait
 from zlib import crc32
 
+from library import SoftonicLibs
+
 from utils import *
 
 class Softonic:
     def __init__(self) -> None:
 
-        self.__parser = Parser()
+        self.__logging = Logs()
         self.__executor = ThreadPoolExecutor(max_workers=10)
+        self.__softonic = SoftonicLibs()
 
         self.__datas: List[dict] = []
         self.__monitorings: List[dict] = []
@@ -31,9 +34,6 @@ class Softonic:
 
         self.MAIN_DOMAIN = 'en.softonic.com'
         self.MAIN_URL = 'https://en.softonic.com/'
-        self.API_REVIEW = 'https://disqus.com/api/3.0/threads/listPostsThreaded'
-        self.API_KEY = 'E8Uh5l5fHZ6gD8U3KycjAIAk46f68Zw7C6eW8WSjZvCLXebZ7p0r1yrYDrLilk2F'
-        self.DISQUS_API_COMMENT = 'https://disqus.com/embed/comments'
 
         self.TYPES = [
             "new-apps",
@@ -54,47 +54,6 @@ class Softonic:
 
         self.detail_reviews = []
         ...
-
-
-    def __retry(self, url: str, 
-                retry_interval: int = 10) -> Response:
-
-        while True:
-            try:
-                response = requests.get(url)
-
-                logger.info(f'request to: {url}')
-                logger.info(f'reponse: {response.status_code}')
-                print()
-
-                if response.status_code in self.RESPONSE_CODE: return response
-
-                logger.warning(f'request to: {url}')
-                logger.warning(f'reponse: {response.status_code}')
-                print()
-                
-                sleep(retry_interval)
-                retry_interval+=5
-            
-            except Exception as err: 
-                logger.error(f'request to: {url}')
-                logger.error(f'reponse: {err}')
-                print()
-                
-                sleep(retry_interval)
-                retry_interval+=5
-                ...
-        ...
-    def __param_second_cursor(self, cursor: str, thread: str) -> str:
-
-        return f'https://disqus.com/api/3.0/threads/listPostsThreaded?limit=50&thread={thread}&forum=en-softonic-com&order=popular&cursor={cursor}&api_key={self.API_KEY}'
-        ...
-
-
-    def __build_param_disqus(self, url_apk: str, name_apk: str) -> str:
-        return f'{self.DISQUS_API_COMMENT}/?base=default&f=en-softonic-com&t_u={url_apk}/comments&t_d={name_apk}&s_o=default#version=cb3f36bfade5c758ef967a494d077f95'
-        ...
-
 
     def __extract_review(self, raw_game: str) -> None: # halaman game
         url_game = raw_game["url_game"]
@@ -279,8 +238,6 @@ class Softonic:
 
                 self.__file.write_json(path=path, content=raw_game)
 
-                
-
 
         if total_error:    
             message="failed request to api review"
@@ -333,45 +290,6 @@ class Softonic:
 
         ...
 
-
-    def __fetch_game(self, url: str):
-        response = self.__retry(url=url)
-        
-        games = []
-        page = 1
-        while True:
-            html = PyQuery(response.text)
-
-            for game in html.find('a[data-meta="app"]'): games.append(PyQuery(game).attr('href'))
-
-            response: Response = self.__retry(url=f'{url}/{page}')
-
-            if page > 1 and response.history: break
-
-            logger.info(f'page: {page}')
-            logger.info(f'total application: {len(games)}')
-            print()
-
-            page+=1
-
-            if response.status_code != 200: break
-            if not html.find('a[data-meta="app"]'): break
-
-            ...
-        return games
-        ...
-
-
-    def __fetch_categories(self, url: str) -> List[str]:
-        response: Response = self.__retry(url=url)
-        html = PyQuery(response.text)
-
-        ic(url)
-    
-        categories_urls = [PyQuery(categories).attr('href') for categories in html.find('#sidenav-menu a[class="menu-categories__link"]')]
-        
-        return categories_urls
-        
     def __extract_game(self, url_game: str) -> None:
         ic(url_game)
         response = self.__retry(url=url_game["url"].replace('/comments', ''))
@@ -400,12 +318,12 @@ class Softonic:
     def main(self):
 
         for platform in self.PLATFORMS:
-            categories_urls = self.__fetch_categories(url=self.MAIN_URL+platform)
+            categories_urls = self.__softonic.collect_categories(url=self.MAIN_URL+platform)
 
             for categories in categories_urls:
 
                 for type in self.TYPES:
-                    games = self.__fetch_game(url=f'{categories}:{type}')
+                    games = self.__softonic.collect_games(url=f'{categories}:{type}')
 
                     task_executor = []
                     for index, game in enumerate(games):

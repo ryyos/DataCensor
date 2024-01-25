@@ -12,7 +12,7 @@ class ApiRetry:
         self.__faker = FakeUserAgent(browsers='chrome', os='windows')
         self.__sessions = Session()
     
-    def __retry(self, url: str, 
+    def retry(self, url: str, 
                 action: str, 
                 payload: dict = None, 
                 retry_interval: int = 1,

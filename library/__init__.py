@@ -1,0 +1,1 @@
+from .softonic.dependency import SoftonicLibs
