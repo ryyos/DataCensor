@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, wait
 from zlib import crc32
 from dotenv import *
-
+from component import codes
 from server.s3 import ConnectionS3
 from library import SoftonicLibs
 from utils import *
@@ -88,6 +88,7 @@ class Softonic:
                 descs[-1]["sub_description"].append(text)
 
         detail_game = {
+            "id": crc32(vname(headers.find('head > title').text().split(' - ')[0]).encode('utf-8')),
             "title": headers.find('head > title').text().split(' - ')[0],
             "version": PyQuery(headers.find('li[data-meta="version"]')[-1]).text().replace('V ', '') if headers.find('li[data-meta="version"]') else None,
             "language": PyQuery(headers.find('ul[class="app-header__features"] > li[class="app-header__item"]')[1]).text(),
@@ -121,7 +122,7 @@ class Softonic:
             ...
 
             detail_review = {
-                "id": int(review["id"]),
+                "id_review": int(review["id"]),
                 "username_reviews": review["author"]["name"],
                 "image_reviews": review["author"]["avatar"]["permalink"],
                 "created_time": review["createdAt"].replace('T', ' '),
@@ -169,8 +170,8 @@ class Softonic:
 
             ... # Logging
             if response == 200 :
-                self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
-                               id_review=review["id"],
+                self.__logs.logging(id_product=detail_game["id"],
+                               id_review=review["id_review"],
                                status_conditions=status_condtion,
                                status_runtime='success',
                                total=len(reviews["all_reviews"]),
@@ -182,9 +183,9 @@ class Softonic:
 
             else:
                 reviews["error"].append({
-                    "message": "failed to write to s3",
-                    "type": "ConnectionError",
-                    "id": detail_review["id"]
+                    "message": "Failed write to s3",
+                    "type": codes[str(response)],
+                    "id": detail_review["id_review"]
                 })
 
                 
@@ -198,7 +199,7 @@ class Softonic:
                             status_conditions=status_condtion,
                             status_runtime='error',
                             total=len(reviews["all_reviews"]),
-                            success=len(reviews["all_reviews"]),
+                            success=len(reviews["all_reviews"])- len(reviews["error"]),
                             failed=index+1,
                             sub_source=detail_game["title"],
                             message=err["message"],

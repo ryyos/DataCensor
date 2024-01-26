@@ -1,5 +1,5 @@
 
-
+from component import codes
 from typing import List
 from pyquery import PyQuery
 
@@ -7,29 +7,28 @@ from utils import *
 
 class AppsApkLibs:
     def __init__(self) -> None:
+        self.__api = ApiRetry()
         ...
 
     def collect_apps(self, url_page: str) -> List[str]:
-        response = self.__retry(url_page)
+        response = self.__api.retry(url=url_page, action='get')
         html = PyQuery(response.text)
 
         apps = html.find('article.vce-post.post.type-post.status-publish.format-standard.has-post-thumbnail.hentry h2 a')
 
         return apps
+        ...
             
-    def write_detail(self, headers: dict, detail: dict):
+    def write_detail(self, headers: dict):
         path_detail = f'{create_dir(headers=headers, website="appsapk")}/detail/{vname(headers["reviews_name"])}.json'
 
         headers.update({
             "path_data_raw": path_detail,
-            "path_data_clean": self.__convert_path(path_detail)
-        })
-
-        headers["detail_application"].update({
-            "descriptions": detail.find('#description').text()
+            "path_data_clean": convert_path(path_detail)
         })
 
         File.write_json(path_detail, headers)
+        ...
 
     def collect_reviews(self, url_app: str) -> List[dict]:
         all_reviews: List[dict] = []
@@ -40,13 +39,13 @@ class AppsApkLibs:
 
             url_review = f'{url_app}comment-page-{comment_page}/#comments'
 
-            response = self.__retry(url_review)
+            response = self.__api.retry(url=url_review, action='get')
             app = PyQuery(response.text)
 
             if response.status_code != 200:
                 error.append({
                     "message": response.text,
-                    "type": response.status_code,
+                    "type": codes[str(response.status_code)],
                     "id": None
                 })
 

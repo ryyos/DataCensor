@@ -1,3 +1,4 @@
+import os
 
 from typing import List
 from time import strftime
@@ -10,7 +11,7 @@ class Logs:
         self.PATH_LOG = path_log
         self.PATH_MONITORING = path_monitoring
 
-        self.__datas: List[dict] = []
+        self.__logs: List[dict] = []
         self.__monitorings: List[dict] = []
         ...
 
@@ -28,7 +29,11 @@ class Logs:
 
         uid_found = False
 
-        content = {
+        try: os.makedirs(f'{"/".join(self.PATH_LOG.split("/")[:-1])}')
+        except Exception: ...
+
+
+        monitoring = {
             "Crawlling_time": now(),
             "id_project": None,
             "project": "Data Intelligence",
@@ -43,7 +48,7 @@ class Logs:
             "assign": "Rio"
         }
 
-        monitoring = {
+        log = {
             "Crawlling_time": now(),
             "id_project": None,
             "project": "Data Intelligence",
@@ -59,26 +64,29 @@ class Logs:
             "assign": "Rio"
         }
 
-        for index, data in enumerate(self.__datas):
+        for index, data in enumerate(self.__monitorings):
             if id_product == data["id_sub_source"]:
-                self.__datas[index]["total_data"] = total
-                self.__datas[index]["total_success"] = success
-                self.__datas[index]["total_failed"] = failed
-                self.__datas[index]["status"] = status_conditions
+                self.__monitorings[index]["total_data"] = total
+                self.__monitorings[index]["total_success"] = success
+                self.__monitorings[index]["total_failed"] = failed
+                self.__monitorings[index]["status"] = status_conditions
                 uid_found = True
                 break
 
         if not uid_found:
-            self.__datas.append(content)
+            self.__monitorings.append(monitoring)
 
         if not total:
-            File.write_json(self.PATH_MONITORING, self.__datas)
+            self.__monitorings.append(monitoring)
+            File.write_json(self.PATH_MONITORING, self.__monitorings)
 
         else:
-            self.__monitorings.append(monitoring)
-            File.write_json(self.PATH_MONITORING, self.__datas)
+            File.write_json(self.PATH_MONITORING, self.__monitorings)
             
-            if not id_review and status_conditions is not 'done':
-                File.write_json(self.PATH_LOG, self.__monitorings)
+            if not id_review and status_conditions == 'done':
+                ...
+            else:
+                self.__logs.append(log)
+                File.write_json(self.PATH_LOG, self.__logs)
                 
         ...

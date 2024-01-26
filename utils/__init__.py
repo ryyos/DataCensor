@@ -1,4 +1,4 @@
-from .corrector import vname
+from .corrector import vname, vtext
 from .datetimes import convert_time, now
 from .directory import convert_path, create_dir
 from .fileIO import File
