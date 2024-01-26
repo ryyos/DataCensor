@@ -4,6 +4,7 @@ import boto3
 from botocore.config import Config
 from dotenv import *
 from json import dumps
+from icecream import ic
 
 class ConnectionS3:
     def __init__(self, access_key_id, secret_access_key, endpoint_url) -> None:
@@ -11,13 +12,19 @@ class ConnectionS3:
             "max_attempts": 10,
             "mode": "standard"
         })
+
         self.__s3 = boto3.client('s3', 
                                  aws_access_key_id= access_key_id, 
                                  aws_secret_access_key=secret_access_key, 
-                                 endpoint_url=endpoint_url)
+                                 endpoint_url=endpoint_url,
+                                 config=self.config)
 
-    def upload(self, key: str, body: dict, bucket: str) -> None:
-        self.__s3.put_object(Bucket=bucket, Key=key, Body=dumps(body, indent=2, ensure_ascii=False))
+    def upload(self, key: str, body: dict, bucket: str) -> int:
+        response: dict = self.__s3.put_object(Bucket=bucket, Key=key, Body=dumps(body, indent=2, ensure_ascii=False))
+
+        ic(response)
+        return response['ResponseMetadata']['HTTPStatusCode']
+
 
 if(__name__ == '__main__'):
     load_dotenv()

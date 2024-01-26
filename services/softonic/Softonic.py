@@ -26,19 +26,18 @@ class Softonic:
                             path_log='logs/softonic/monitoring_logs.json',
                             domain='en.softonic.com')
         
-        self.__executor = ThreadPoolExecutor(max_workers=3)
-        self.__softonic = SoftonicLibs()
         self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
                                  secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
                                  endpoint_url=os.getenv('ENDPOINT'),
                                  )
-        
-        ic(os.getenv('ACCESS_KEY_ID'))
-        ic(os.getenv('SECRET_ACCESS_KEY'))
-        ic()
-        self._bucket = os.getenv('BUCKET')
-        self.logs: List[dict] = []
+
+        self.__executor = ThreadPoolExecutor(max_workers=3)
+        self.__softonic = SoftonicLibs()
         self.__api = ApiRetry()
+        
+        self._bucket = os.getenv('BUCKET')
+        
+        self.logs: List[dict] = []
 
         self.MAIN_DOMAIN = 'en.softonic.com'
         self.MAIN_URL = 'https://en.softonic.com/'
@@ -120,95 +119,103 @@ class Softonic:
         temporarys = []
         for index, review in enumerate(reviews["all_reviews"]):
             
-            ... # Logging
-            self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
-                           id_review=review["id"],
-                           status_conditions='on progress',
-                           status_runtime='success',
-                           total=len(reviews["all_reviews"]),
-                           success=index,
-                           failed=0,
-                           sub_source=detail_game["title"],
-                           message=None,
-                           type_error=None)
-
             ...
 
-            if review["parent"]:
-                for parent in temporarys:
-                    if parent["id"] == review["parent"]:
-                        parent["reply_content_reviews"].append({
-                            "username_reply_reviews":  review["author"]["name"],
-                            "content_reviews": review["raw_message"]
-                        })
-                        parent["total_reply_reviews"] +=1
-            
+            detail_review = {
+                "id": int(review["id"]),
+                "username_reviews": review["author"]["name"],
+                "image_reviews": review["author"]["avatar"]["permalink"],
+                "created_time": review["createdAt"].replace('T', ' '),
+                "created_time_epoch": convert_time(review["createdAt"]),
+                "email_reviews": None,
+                "company_name": None,
+                "location_reviews": None,
+                "title_detail_reviews": None,
+
+                "total_reviews": len(reviews["all_reviews"]),
+                "reviews_rating": {
+                    "total_rating": PyQuery(reviews["html"].find('div.rating-info')[0]).text(),
+                    "detail_total_rating": None
+                },
+                "detail_reviews_rating": [
+                    {
+                    "score_rating": None,
+                    "category_rating": None
+                    }
+                ],
+                "total_likes_reviews": review["likes"],
+                "total_dislikes_reviews": review["dislikes"],
+                "total_reply_reviews": 0,
+                "content_reviews": PyQuery(review["raw_message"]).text(),
+                "reply_content_reviews": [],
+                "date_of_experience": review["createdAt"].replace('T', ' '),
+                "date_of_experience_epoch": convert_time(review["createdAt"])
+            }
+
+            path = f'{self.__softonic.create_dir(raw_data=raw_game, main_path="data")}/{detail_review["id"]}.json'
+
+            raw_game.update({
+                "detail_reviews": detail_review,
+                "detail_applications": detail_game,
+                "reviews_name": detail_game["title"],
+                "path_data_raw": 'S3://ai-pipeline-statistics/'+path,
+                "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path),
+            })
+
+            response = self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
+            # File.write_json(path=path, content=raw_game)
+
+            if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
+            else: status_condtion = 'on progess'
+
+            ... # Logging
+            if response == 200 :
+                self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
+                               id_review=review["id"],
+                               status_conditions=status_condtion,
+                               status_runtime='success',
+                               total=len(reviews["all_reviews"]),
+                               success=index+1,
+                               failed=0,
+                               sub_source=detail_game["title"],
+                               message=None,
+                               type_error=None)
+
             else:
-                detail_review = {
-                    "id": int(review["id"]),
-                    "username_reviews": review["author"]["name"],
-                    "image_reviews": 'https:'+review["author"]["avatar"]["permalink"],
-                    "created_time": review["createdAt"].replace('T', ' '),
-                    "created_time_epoch": convert_time(review["createdAt"]),
-                    "email_reviews": None,
-                    "company_name": None,
-                    "location_reviews": None,
-                    "title_detail_reviews": None,
-
-                    "total_reviews": len(reviews["all_reviews"]),
-                    "reviews_rating": {
-                        "total_rating": PyQuery(reviews["html"].find('div.rating-info')[0]).text(),
-                        "detail_total_rating": None
-                    },
-                    "detail_reviews_rating": [
-                        {
-                        "score_rating": None,
-                        "category_rating": None
-                        }
-                    ],
-                    "total_likes_reviews": review["likes"],
-                    "total_dislikes_reviews": review["dislikes"],
-                    "total_reply_reviews": 0,
-                    "content_reviews": PyQuery(review["raw_message"]).text(),
-                    "reply_content_reviews": [],
-                    "date_of_experience": review["createdAt"].replace('T', ' '),
-                    "date_of_experience_epoch": convert_time(review["createdAt"])
-                }
-
-                path = f'{self.__softonic.create_dir(raw_data=raw_game, main_path="data")}/{detail_review["id"]}.json'
-
-                raw_game.update({
-                    "detail_reviews": detail_review,
-                    "detail_applications": detail_game,
-                    "reviews_name": detail_game["title"],
-                    "path_data_raw": path,
-                    "path_data_clean": convert_path(path),
+                reviews["error"].append({
+                    "message": "failed to write to s3",
+                    "type": "ConnectionError",
+                    "id": detail_review["id"]
                 })
 
-                self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
-                # File.write_json(path=path, content=raw_game)
-
                 
-        if reviews["total_error"]:    
-            message="failed request to api review"
-            type_error="request failed"
-            runtime = 'error'
-        else:
-            message = None
-            runtime = 'success'
-            type_error = None
-
-        self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
-                        id_review=None,
-                        status_conditions='done',
-                        status_runtime=runtime,
-                        total=len(reviews["all_reviews"]),
-                        success=len(reviews["all_reviews"]),
-                        failed=reviews["total_error"],
-                        sub_source=detail_game["title"],
-                        message=message,
-                        type_error=type_error)
     
+        for index, err in enumerate(reviews["error"]):
+            if index+1 == len(reviews["error"]): status_condtion = 'done'
+            else: status_condtion = 'on progress'
+
+            self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
+                            id_review=None,
+                            status_conditions=status_condtion,
+                            status_runtime='error',
+                            total=len(reviews["all_reviews"]),
+                            success=len(reviews["all_reviews"]),
+                            failed=index+1,
+                            sub_source=detail_game["title"],
+                            message=err["message"],
+                            type_error=err["type"])
+    
+        if not reviews["all_reviews"]:
+            self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
+                            id_review=None,
+                            status_conditions='done',
+                            status_runtime='success',
+                            total=len(reviews["all_reviews"]),
+                            success=len(reviews["all_reviews"]),
+                            failed=len(reviews["error"]),
+                            sub_source=detail_game["title"],
+                            message=None,
+                            type_error=None)
 
         ic({
             "len all review": len(reviews["all_reviews"])

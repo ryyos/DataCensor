@@ -85,14 +85,25 @@ class SoftonicLibs:
         disqus_page = PyQuery(response.text)
         reviews_temp = json.loads(disqus_page.find('#disqus-threadData').text())
 
-        all_reviews = []
-        total_error = 0
+        all_reviews: List[dict] = []
+        error: List[dict] = []
 
         ic(len(reviews_temp["response"]["posts"]))
 
         for review in reviews_temp["response"]["posts"]:
-            
-            all_reviews.append(review)
+
+            ic(review["parent"])
+            if review["parent"]:
+                for parent in all_reviews:
+                    if parent["id"] == review["parent"]:
+                        parent["reply_content_reviews"].append({
+                            "username_reply_reviews":  review["author"]["name"],
+                            "content_reviews": review["raw_message"]
+                        })
+                        parent["total_reply_reviews"] +=1
+
+            else:
+                all_reviews.append(review)
 
         try:
             cursor = reviews_temp["cursor"]["next"]
@@ -105,7 +116,11 @@ class SoftonicLibs:
                 if not reviews["cursor"]["hasNext"]: break
                 
                 if response.status_code != 200:
-                    total_error+=1
+                    error.append({
+                        "message": response.text,
+                        "type": response.status_code,
+                        "id": None
+                    })
                     break
 
                 cursor = reviews["cursor"]["next"]
@@ -113,7 +128,18 @@ class SoftonicLibs:
 
 
                 for review in reviews["response"]:
-                    all_reviews.append(review)
+                    ic(review["parent"])
+                    if review["parent"]:
+                        for parent in all_reviews:
+                            if parent["id"] == review["parent"]:
+                                parent["reply_content_reviews"].append({
+                                    "username_reply_reviews":  review["author"]["name"],
+                                    "content_reviews": review["raw_message"]
+                                })
+                                parent["total_reply_reviews"] +=1
+
+                    else:
+                        all_reviews.append(review)
 
         except Exception as err:
             ...
@@ -121,7 +147,7 @@ class SoftonicLibs:
         return {
             "all_reviews": all_reviews,
             "html": html,
-            "total_error": total_error
+            "error": error
         }
 
     def write_detail(self, headers: dict, detail_game: dict):

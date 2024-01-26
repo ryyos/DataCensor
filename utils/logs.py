@@ -71,8 +71,14 @@ class Logs:
         if not uid_found:
             self.__datas.append(content)
 
-        self.__monitorings.append(monitoring)
-        File.write_json(self.PATH_MONITORING, self.__datas)
-        if not id_review and status_conditions is not 'done':
-            File.write_json(self.PATH_LOG, self.__monitorings)
+        if not total:
+            File.write_json(self.PATH_MONITORING, self.__datas)
+
+        else:
+            self.__monitorings.append(monitoring)
+            File.write_json(self.PATH_MONITORING, self.__datas)
+            
+            if not id_review and status_conditions is not 'done':
+                File.write_json(self.PATH_LOG, self.__monitorings)
+                
         ...
