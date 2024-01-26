@@ -113,8 +113,7 @@ class Softonic:
 
         reviews: dict = self.__softonic.get_reviews(url_game)
 
-        ic('=============================')
-        ic(len(reviews["all_reviews"]))
+        logger.info(f'len reviews: {len(reviews["all_reviews"])}')
 
         temporarys = []
         for index, review in enumerate(reviews["all_reviews"]):
