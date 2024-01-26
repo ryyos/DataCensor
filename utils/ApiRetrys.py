@@ -28,7 +28,7 @@ class ApiRetry:
                 retry = 0
                 while True:
                     try:
-                        response = requests.get(url=url, headers={'User-Agent': self.__faker.random})
+                        response = self.__sessions.get(url=url, headers={'User-Agent': self.__faker.random})
 
 
                         logger.info(f'user agent: {self.__faker.random}')

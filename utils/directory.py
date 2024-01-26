@@ -1,11 +1,13 @@
 import os
 from .corrector import vname
 
-def create_dir(main_path: str, result: dict) -> str:
-    try: os.makedirs(f'{main_path}/data_raw/uptodown/{result["detail_application"]["platform"]}/{result["type"]}/{vname(result["reviews_name"].lower())}/json/detail')
+
+def create_dir(self, headers: dict, website: str) -> str:
+    try: os.makedirs(f'{self.MAIN_PATH}/data_raw/{website}/{vname(headers["reviews_name"].lower())}/json/detail')
     except Exception: ...
-    finally: return f'{main_path}/data_raw/uptodown/{result["detail_application"]["platform"]}/{result["type"]}/{vname(result["reviews_name"].lower())}/json'
+    finally: return f'{self.MAIN_PATH}/data_raw/{website}/{vname(headers["reviews_name"].lower())}/json'
     ...
+
 
 def convert_path(path: str) -> str:
     
@@ -13,3 +15,4 @@ def convert_path(path: str) -> str:
     path[1] = 'data_clean'
     return '/'.join(path)
     ...
+
