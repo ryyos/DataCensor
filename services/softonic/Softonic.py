@@ -26,7 +26,7 @@ class Softonic:
                             path_log='logs/softonic/monitoring_logs.json',
                             domain='en.softonic.com')
         
-        self.__executor = ThreadPoolExecutor(max_workers=10)
+        self.__executor = ThreadPoolExecutor(max_workers=3)
         self.__softonic = SoftonicLibs()
         self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
                                  secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
