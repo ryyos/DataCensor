@@ -57,7 +57,7 @@ class AppsApk:
             "link": self.MAIN_URL,
             "domain": self.MAIN_DOMAIN,
             "id": crc32(vname(app.find('h1[class="entry-title"]').text()).encode('utf-8')),
-            "tag": [PyQuery(tag).text() for tag in app.find('a[rel="tag"]')],
+            "tags": [PyQuery(tag).text() for tag in app.find('a[rel="tag"]')],
             "crawling_time": strftime('%Y-%m-%d %H:%M:%S'),
             "crawling_time_epoch": int(time()),
             "path_data_raw": "string",
@@ -86,7 +86,18 @@ class AppsApk:
             "descriptions": app.find('#description').text()
         })
 
-        self.__appsapk.write_detail(results)
+        path_detail = f'{create_dir(headers=results, website="appsapk")}/detail/{vname(results["reviews_name"])}.json'
+
+        results["tags"].append(self.MAIN_DOMAIN)
+        results.update({
+            "path_data_raw": 'S3://ai-pipeline-statistics/'+path_detail,
+            "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path_detail)
+        })
+
+        try:
+            response = self.__s3.upload(key=path_detail, body=results, bucket=self._bucket)
+        except Exception as err:
+            ic(err)
 
         return results
         ...
@@ -147,8 +158,8 @@ class AppsApk:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            # response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
-            response = 200
+            response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
+            # response = 200
 
             if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
             else: status_condtion = 'on progess'
@@ -169,14 +180,18 @@ class AppsApk:
                                type_error=None)
 
             else:
-                reviews["error"].append({
-                    "message": "Failed write to s3",
-                    "type": codes[str(response)],
-                    "id": header["detail_reviews"]["id_review"]
-                })
+                try:
+                    reviews["error"].append({
+                        "message": "Failed write to s3",
+                        "type": codes[str(response)],
+                        "id": header["detail_reviews"]["id_review"]
+                    })
+                except Exception as err:
+                    ic(err)
+                    ic(response)
 
 
-            File.write_json(path, header)
+            # File.write_json(path, header)
 
         for index, err in enumerate(reviews["error"]):
             ic(reviews["error"])

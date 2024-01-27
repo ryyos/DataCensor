@@ -28,6 +28,7 @@ class AppsApkLibs:
         })
 
         File.write_json(path_detail, headers)
+        
         ...
 
     def collect_reviews(self, url_app: str) -> List[dict]:
