@@ -162,7 +162,7 @@ class SoftonicLibs:
             "path_data_clean": convert_path(path_detail)
         })
 
-        # File.write_json(path_detail, headers)
+        File.write_json(path_detail, headers)
         return {
             "path_detail": path_detail,
             "data_detail": headers

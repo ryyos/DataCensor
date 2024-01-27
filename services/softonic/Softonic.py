@@ -106,9 +106,9 @@ class Softonic:
 
         ... # menulis detail
         details: dict = self.__softonic.write_detail(headers=raw_game, detail_game=detail_game)
-        self.__s3.upload(key=details["path_detail"], 
-                         body=details["data_detail"], 
-                         bucket=self._bucket)
+        # self.__s3.upload(key=details["path_detail"], 
+        #                  body=details["data_detail"], 
+        #                  bucket=self._bucket)
 
         ...
 
@@ -152,7 +152,7 @@ class Softonic:
                 "date_of_experience_epoch": convert_time(review["createdAt"])
             }
 
-            path = f'{self.__softonic.create_dir(raw_data=raw_game, main_path="data")}/{detail_review["id"]}.json'
+            path = f'{self.__softonic.create_dir(raw_data=raw_game, main_path="data")}/{detail_review["id_review"]}.json'
 
             raw_game.update({
                 "detail_reviews": detail_review,
@@ -162,8 +162,9 @@ class Softonic:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path),
             })
 
-            response = self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
-            # File.write_json(path=path, content=raw_game)
+            # response = self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
+            File.write_json(path=path, content=raw_game)
+            response = 200
 
             if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
             else: status_condtion = 'on progess'
@@ -171,7 +172,7 @@ class Softonic:
             ... # Logging
             if response == 200 :
                 self.__logs.logging(id_product=detail_game["id"],
-                               id_review=review["id_review"],
+                               id_review=detail_review["id_review"],
                                status_conditions=status_condtion,
                                status_runtime='success',
                                total=len(reviews["all_reviews"]),
