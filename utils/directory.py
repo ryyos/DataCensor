@@ -3,9 +3,9 @@ from .corrector import vname
 
 
 def create_dir(headers: dict, website: str) -> str:
-    try: os.makedirs(f'data/data_raw/{website}/{vname(headers["reviews_name"].lower())}/json/detail')
+    try: os.makedirs(f'data/data_raw/data_review/{website}/{vname(headers["reviews_name"].lower())}/json/detail')
     except Exception: ...
-    finally: return f'data/data_raw/{website}/{vname(headers["reviews_name"].lower())}/json'
+    finally: return f'data/data_raw/data_review/{website}/{vname(headers["reviews_name"].lower())}/json'
     ...
 
 

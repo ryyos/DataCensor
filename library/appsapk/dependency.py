@@ -2,16 +2,16 @@
 from component import codes
 from typing import List
 from pyquery import PyQuery
-
+from ApiRetrys import ApiRetry
 from utils import *
 
 class AppsApkLibs:
     def __init__(self) -> None:
-        self.__api = ApiRetry()
+        self.__api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://www.appsapk.com')
         ...
 
     def collect_apps(self, url_page: str) -> List[str]:
-        response = self.__api.retry(url=url_page, action='get')
+        response = self.__api.get(url=url_page)
         html = PyQuery(response.text)
 
         apps = html.find('article.vce-post.post.type-post.status-publish.format-standard.has-post-thumbnail.hentry h2 a')
@@ -40,7 +40,7 @@ class AppsApkLibs:
 
             url_review = f'{url_app}comment-page-{comment_page}/#comments'
 
-            response = self.__api.retry(url=url_review, action='get')
+            response = self.__api.get(url=url_review)
             app = PyQuery(response.text)
 
             if response.status_code != 200:

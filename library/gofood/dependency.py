@@ -12,7 +12,8 @@ class GofoodLibs:
         self.__api = ApiRetry(show_logs=True, handle_forbidden=True, redirect_url='https://gofood.co.id', defaulth_headers=True)
 
         self.VERSION = '9.0.0'
-        self.FOODS_API = f'https://gofood.co.id/api/outlets/'
+        self.FOODS_API = f'https://gofood.co.id/api/outlets'
+        self.API_REVIEW_PAGE = 'https://gofood.co.id/api/outlets/'
         ...
 
 
@@ -120,6 +121,7 @@ class GofoodLibs:
                 ic(err)
                 break
 
+        ic(len(cards))
         return cards
         ...
 
@@ -127,7 +129,7 @@ class GofoodLibs:
         uid = headers["restaurant_id"]
         page = '?page=1&page_size=50'
         
-        response = self.__api.get(url=f'{self.FOODS_API}{uid}/reviews{page}',max_retries=30)
+        response = self.__api.get(url=f'{self.API_REVIEW_PAGE}{uid}/reviews{page}',max_retries=30)
 
         ic(response)
         ...
@@ -142,13 +144,13 @@ class GofoodLibs:
                 for review in reviews: all_reviews.append(review)
 
                 logger.info(f'page review: {page_review}')
-                logger.info(f'api review page: {self.FOODS_API}{uid}/reviews{page}')
+                logger.info(f'api review page: {self.API_REVIEW_PAGE}{uid}/reviews{page}')
                 print()
 
                 page = response.json().get("next_page", None)
                 if page:
                     ic(page)
-                    response = self.__api.get(url=f'{self.FOODS_API}{uid}/reviews{page}', max_retries=30)
+                    response = self.__api.get(url=f'{self.API_REVIEW_PAGE}{uid}/reviews{page}', max_retries=30)
 
                     ... # Jika gagal request ke  review page selanjutnya
                     if response.status_code != 200: 

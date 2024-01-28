@@ -1,16 +1,22 @@
 import json
 import os
 
+from zlib import crc32
 from typing import List
 from icecream import ic
 from requests import Response
 from pyquery import PyQuery
-
+from ApiRetrys import ApiRetry
 from utils import *
 
 class SoftonicLibs:
     def __init__(self) -> None:
-        self.__api = ApiRetry()
+
+        self.__api = ApiRetry(show_logs=True, 
+                              handle_forbidden=True, 
+                              redirect_url='https://en.softonic.com/', 
+                              defaulth_headers=True)
+
 
         self.API_REVIEW = 'https://disqus.com/api/3.0/threads/listPostsThreaded'
         self.API_KEY = 'E8Uh5l5fHZ6gD8U3KycjAIAk46f68Zw7C6eW8WSjZvCLXebZ7p0r1yrYDrLilk2F'
@@ -18,7 +24,7 @@ class SoftonicLibs:
         ...
         
     def collect_categories(self, url: str) -> List[str]:
-        response: Response = self.__api.retry(url=url, action='get')
+        response: Response = self.__api.get(url=url)
         html = PyQuery(response.text)
 
         categories_urls = [PyQuery(categories).attr('href') for categories in html.find('#sidenav-menu a[class="menu-categories__link"]')]
@@ -27,7 +33,7 @@ class SoftonicLibs:
         ...
 
     def collect_games(self, url: str):
-        response = self.__api.retry(url=url, action='get')
+        response = self.__api.get(url=url)
         
         games = []
         page = 1
@@ -36,7 +42,7 @@ class SoftonicLibs:
 
             for game in html.find('a[data-meta="app"]'): games.append(PyQuery(game).attr('href'))
 
-            response: Response = self.__api.retry(url=f'{url}/{page}', action='get')
+            response: Response = self.__api.get(url=f'{url}/{page}')
 
             if page > 1 and response.history: break
 
@@ -63,14 +69,14 @@ class SoftonicLibs:
         return f'{self.DISQUS_API_COMMENT}/?base=default&f=en-softonic-com&t_u={url_apk}/comments&t_d={name_apk}&s_o=default#version=cb3f36bfade5c758ef967a494d077f95'
         ...
     def create_dir(self, raw_data: dict, main_path: str) -> str:
-        try: os.makedirs(f'{main_path}/data_raw/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json/detail')
+        try: os.makedirs(f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json/detail')
         except Exception: ...
-        finally: return f'{main_path}/data_raw/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json'
+        finally: return f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json'
         ...
 
     def get_reviews(self, url_game: str):
 
-        response = self.__api.retry(url=f'{url_game}/comments', action='get')
+        response = self.__api.get(url=f'{url_game}/comments')
         html = PyQuery(response.text)
 
         game_title = html.find('head > title:first-child')
@@ -80,7 +86,7 @@ class SoftonicLibs:
 
         ... # extract disqus review
 
-        response = self.__api.retry(url=self.build_param_disqus(name_apk=game_title, url_apk=url_game), action='get')
+        response = self.__api.get(url=self.build_param_disqus(name_apk=game_title, url_apk=url_game))
 
         disqus_page = PyQuery(response.text)
         reviews_temp = json.loads(disqus_page.find('#disqus-threadData').text())
@@ -111,7 +117,7 @@ class SoftonicLibs:
 
             while True:
 
-                reviews = self.__api.retry(url=self.param_second_cursor(thread=thread,cursor=cursor), action='get').json()
+                reviews = self.__api.get(url=self.param_second_cursor(thread=thread,cursor=cursor)).json()
 
                 if not reviews["cursor"]["hasNext"]: break
                 
@@ -157,6 +163,7 @@ class SoftonicLibs:
         path_detail = f'{self.create_dir(raw_data=headers, main_path="data")}/detail/{vname(detail_game["title"])}.json'
 
         headers.update({
+            "id": detail_game["id"],
             "detail_applications": detail_game,
             "path_data_raw": path_detail,
             "path_data_clean": convert_path(path_detail)

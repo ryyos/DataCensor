@@ -99,10 +99,10 @@ class Logs:
 
         if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
         else: status_condtion = 'on progess'
+
+        error = []
         
         if response == 200 :
-            ic(index)
-            ic(len(reviews["error"]))
             func.logging(id_product=header["id"],
                             id_review=header["detail_reviews"]["id_review"],
                             status_conditions=status_condtion,
@@ -116,7 +116,7 @@ class Logs:
 
         else:
             try:
-                reviews["error"].append({
+                error.append({
                     "message": "Failed write to s3",
                     "type": codes[str(response)],
                     "id": header["detail_reviews"]["id_review"]
@@ -127,9 +127,12 @@ class Logs:
 
 
         # File.write_json(path, header)
+        return error
 
+    def logsS3Err(self, func: any, header: dict, reviews: dict):
+        ic(reviews["error"])
+        
         for index, err in enumerate(reviews["error"]):
-            ic(reviews["error"])
             if index+1 == len(reviews["error"]): status_condtion = 'done'
             else: status_condtion = 'on progress'
 
@@ -155,4 +158,3 @@ class Logs:
                             sub_source=header["reviews_name"],
                             message=None,
                             type_error=None)
-

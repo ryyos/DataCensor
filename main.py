@@ -11,6 +11,6 @@ from services import Gofood
 #     app = AppsApk()
 #     app.main()
 
-if __name__=='__main__':
-    go = Gofood()
-    go.main()
+# if __name__=='__main__':
+#     go = Gofood()
+#     go.main()

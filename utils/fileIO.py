@@ -4,8 +4,13 @@ class File:
 
     @staticmethod
     def write_json(path: str, content: any) -> None:
-        with open(path, 'w', encoding= "utf-8") as file:
-            json.dump(content, file, ensure_ascii=False, indent=2, default=str)
+        try:
+            with open(path, 'w', encoding= "utf-8") as file:
+                json.dump(content, file, ensure_ascii=False, indent=2, default=str)
+
+        except Exception as err:
+            with open(path, 'w') as file:
+                json.dump(content, file, indent=2, default=str)
 
     @staticmethod
     def write_str(path: str, content: any) -> None:

@@ -1,2 +1,3 @@
 from .softonic.dependency import SoftonicLibs
 from .gofood.dependency import GofoodLibs
+from .appsapk.dependency import AppsApkLibs

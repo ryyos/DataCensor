@@ -100,7 +100,7 @@ class Gofood:
         
         for index, comment in tqdm(enumerate(reviews["all_reviews"]), ascii=True, smoothing=0.1, total=len(reviews["all_reviews"])):
             detail_reviews = {
-                "username_id": comment["id"],
+                "id_review": comment["id"],
                 "username_reviews": comment["author"]["fullName"],
                 "initialName": comment["author"]["initialName"],
                 "image_reviews": comment["author"]["avatarUrl"],
@@ -135,21 +135,27 @@ class Gofood:
 
             raw_json.update({
                 "detail_reviews": detail_reviews,
-                "path_data_raw": f'S3://ai-pipeline-statistics/{path_data}/{detail_reviews["username_id"]}.json',
-                "path_data_clean": f'S3://ai-pipeline-statistics/{convert_path(path_data)}/{detail_reviews["username_id"]}.json'
+                "path_data_raw": f'S3://ai-pipeline-statistics/{path_data}/{detail_reviews["id_review"]}.json',
+                "path_data_clean": f'S3://ai-pipeline-statistics/{convert_path(path_data)}/{detail_reviews["id_review"]}.json'
             })
 
             # response = self.__s3.upload(key=path_data, body=raw_json, bucket=self._bucket)
+            response = 200
+            if index in [2,5,6,4,9,6,11,12]: response = 404
 
-            File.write_json(path=f'{path_data}/{detail_reviews["username_id"]}.json', content=raw_json)
+            File.write_json(path=f'{path_data}/{detail_reviews["id_review"]}.json', content=raw_json)
 
-            # self.__logs.logsS3(func=self.__logs,
-            #                    header=raw_json,
-            #                    index=index,
-            #                    response=response,
-                            #    reviews=reviews)
+            error = self.__logs.logsS3(func=self.__logs,
+                               header=raw_json,
+                               index=index,
+                               response=response,
+                               reviews=reviews)
 
+            reviews["error"].extend(error)
 
+        self.__logs.logsS3Err(func=self.__logs,
+                              header=raw_json,
+                              reviews=reviews)
         ...
 
     def __extract_restaurant(self, ingredient: dict):
@@ -169,76 +175,77 @@ class Gofood:
                 api_review = f'https://gofood.co.id/_next/data/{self.VERSION}/id{card}/reviews.json?id={card.split("/")[-1]}'
                 
             
-                
-                food_review = self.__api.get(url=api_review, max_retries=30)
-                logger.info(card)
+                try:
+                    food_review = self.__api.get(url=api_review, max_retries=30)
+                    logger.info(card)
 
-                # Jika di redirect maka ambil destination dan request ke path yang di berikan
-                if food_review.json()["pageProps"].get("__N_REDIRECT", None):
-                    ic('masuk redirect')
-                    ic(food_review.json()["pageProps"]["__N_REDIRECT"])
-                    food_review = self.__api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{food_review.json()["pageProps"]["__N_REDIRECT"]}/reviews.json?id={card.split("/")[-1]}', max_retries=30)
-
-
-                header_required = {
-                    "link": self.MAIN_URL+food_review.json()["pageProps"].get("outletUrl"),
-                    "domain": self.DOMAIN,
-                    "tags": [tag["displayName"] for tag in food_review.json()["pageProps"]["outlet"]["core"]["tags"]],
-                    "crawling_time": strftime('%Y-%m-%d %H:%M:%S'),
-                    "crawling_time_epoch": int(time()),
-                    "path_data_raw": "",
-                    "path_data_clean": "",
-                    "reviews_name": food_review.json()["pageProps"]["outlet"]["core"]["displayName"],
-                    "location_review": ingredient["city"]["name"].lower(),
-                    "category_reviews": "food & baverage",
-                    "total_reviews": 0,
-
-                    "location_restaurant": {
-                        "city": ingredient["city"]["name"].lower(),
-                        "area": ingredient["restaurant"]["path"].split("/")[-1],
-                        "distance_km": food_review.json()["pageProps"]["outlet"]["delivery"]["distanceKm"],
-                    },
-
-                    "range_prices": self.PRICE[str(food_review.json()["pageProps"]["outlet"]["priceLevel"])],
-                    "restaurant_id": food_review.json()["pageProps"]["outlet"]["uid"],
-
-                    "reviews_rating": {
-                        "total_ratings": food_review.json()["pageProps"]["outlet"]["ratings"],
-                        "detail_total_rating": [
-                            {
-                                "category_rating": self.RATING[rating["id"]],
-                                "score_rating": rating["count"]
-                            } for rating in food_review.json()["pageProps"]["cannedOutlet"]
-                        ],
-                    },
-
-                    "range_prices": self.PRICE[str(food_review.json()["pageProps"]["outlet"]["priceLevel"])],
-                    "restaurant_id": food_review.json()["pageProps"]["outlet"]["uid"],
-                    "detail_reviews": ""
-                }
+                    # Jika di redirect maka ambil destination dan request ke path yang di berikan
+                    if food_review.json()["pageProps"].get("__N_REDIRECT", None):
+                        ic('masuk redirect')
+                        ic(food_review.json()["pageProps"]["__N_REDIRECT"])
+                        food_review = self.__api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{food_review.json()["pageProps"]["__N_REDIRECT"]}/reviews.json?id={card.split("/")[-1]}', max_retries=30)
 
 
-                logger.info(f'city: {ingredient["city"]["name"].lower()}')
-                logger.info(f'restaurant: {ingredient["restaurant"]["path"].split("/")[-1]}')
-                logger.info(f'link: {header_required["link"]}')
-                logger.info(f'api review: {api_review}')
-                logger.info(f'restaurant name: {header_required["reviews_name"]}')
-                logger.info(f'card : {index}')
-                logger.info(f'total cards : {len(cards)}')
-                print()
+                    header_required = {
+                        "id": crc32(vname(food_review.json()["pageProps"]["outlet"]["core"]["displayName"]).encode('utf-8')),
+                        "link": self.MAIN_URL+food_review.json()["pageProps"].get("outletUrl"),
+                        "domain": self.DOMAIN,
+                        "tags": [tag["displayName"] for tag in food_review.json()["pageProps"]["outlet"]["core"]["tags"]],
+                        "crawling_time": strftime('%Y-%m-%d %H:%M:%S'),
+                        "crawling_time_epoch": int(time()),
+                        "path_data_raw": "",
+                        "path_data_clean": "",
+                        "reviews_name": food_review.json()["pageProps"]["outlet"]["core"]["displayName"],
+                        "location_review": ingredient["city"]["name"].lower(),
+                        "category_reviews": "food & baverage",
+                        "total_reviews": 0,
+
+                        "location_restaurant": {
+                            "city": ingredient["city"]["name"].lower(),
+                            "area": ingredient["restaurant"]["path"].split("/")[-1],
+                            "distance_km": food_review.json()["pageProps"]["outlet"]["delivery"]["distanceKm"],
+                        },
+
+                        "range_prices": self.PRICE[str(food_review.json()["pageProps"]["outlet"]["priceLevel"])],
+                        "restaurant_id": food_review.json()["pageProps"]["outlet"]["uid"],
+
+                        "reviews_rating": {
+                            "total_ratings": food_review.json()["pageProps"]["outlet"]["ratings"],
+                            "detail_total_rating": [
+                                {
+                                    "category_rating": self.RATING[rating["id"]],
+                                    "score_rating": rating["count"]
+                                } for rating in food_review.json()["pageProps"]["cannedOutlet"]
+                            ],
+                        },
+
+                        "range_prices": self.PRICE[str(food_review.json()["pageProps"]["outlet"]["priceLevel"])],
+                        "restaurant_id": food_review.json()["pageProps"]["outlet"]["uid"],
+                        "detail_reviews": ""
+                    }
 
 
-                header_required["tags"].append(self.DOMAIN)
-                self.__get_review(raw_json=header_required)
+                    logger.info(f'city: {ingredient["city"]["name"].lower()}')
+                    logger.info(f'restaurant: {ingredient["restaurant"]["path"].split("/")[-1]}')
+                    logger.info(f'link: {header_required["link"]}')
+                    logger.info(f'api review: {api_review}')
+                    logger.info(f'restaurant name: {header_required["reviews_name"]}')
+                    logger.info(f'card : {index}')
+                    logger.info(f'total cards : {len(cards)}')
+                    print()
 
 
-                ic({
-                    # "error": err,
-                    "api_review": api_review,
-                    "card": card
-                })
-                
-                self.__char.append(api_review)
+                    header_required["tags"].append(self.DOMAIN)
+                    self.__get_review(raw_json=header_required)
+
+                except Exception as err:
+                    ic({
+                        "error": err,
+                        "api_review": api_review,
+                        "card": card
+                    })
+                    
+                    self.__char.append(api_review)
 
     def __extract_city(self, city: str) -> None:
         response = self.__api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{city["path"]}.json', max_retries=10)
@@ -255,7 +262,7 @@ class Gofood:
             self.__extract_restaurant(ingredient)
             # task_executor.append(self.__executor.submit(self.__extract_restaurant, ingredient))
 
-        # wait(task_executor)
+        wait(task_executor)
 
 
     def main(self) -> None:

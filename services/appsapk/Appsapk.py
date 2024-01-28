@@ -14,7 +14,8 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from typing import List
 from component import codes
 from server.s3 import ConnectionS3
-from library.appsapk import AppsApkLibs
+from library import AppsApkLibs
+from ApiRetrys import ApiRetry
 
 from utils import *
 from dotenv import *
@@ -25,7 +26,7 @@ class AppsApk:
 
         self.__executor = ThreadPoolExecutor(max_workers=3)
         self.__appsapk = AppsApkLibs()
-        self.__api = ApiRetry()
+        self.__api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://www.appsapk.com')
 
         self.__logs = Logs(path_monitoring='logs/appsapk/monitoring_data.json',
                             path_log='logs/appsapk/monitoring_logs.json',
@@ -44,7 +45,7 @@ class AppsApk:
         ...
 
     def __extract_app(self, url_app: PyQuery) -> dict:
-        response = self.__api.retry(url=url_app, action='get')
+        response = self.__api.get(url=url_app)
         app = PyQuery(response.text)
 
         try: int(total_review = app.find('h3[class="comment-title main-box-title"]').text().split(' ')[0])
@@ -95,7 +96,8 @@ class AppsApk:
         })
 
         try:
-            response = self.__s3.upload(key=path_detail, body=results, bucket=self._bucket)
+            # response = self.__s3.upload(key=path_detail, body=results, bucket=self._bucket)
+            self.__appsapk.write_detail(headers=results)
         except Exception as err:
             ic(err)
 
@@ -158,70 +160,21 @@ class AppsApk:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
-            # response = 200
+            # response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
+            response = 200
+            if index in [2,5,6,4,9,6,11,12]: response = 404
 
-            if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
-            else: status_condtion = 'on progess'
+            error = self.__logs.logsS3(func=self.__logs,
+                               header=header,
+                               index=index,
+                               response=response,
+                               reviews=reviews)
 
-            ... # Logging
-            if response == 200 :
-                ic(index)
-                ic(len(reviews["error"]))
-                self.__logs.logging(id_product=header["id"],
-                               id_review=header["detail_reviews"]["id_review"],
-                               status_conditions=status_condtion,
-                               status_runtime='success',
-                               total=len(reviews["all_reviews"]),
-                               success=index+1-len(reviews["error"]),
-                               failed=0,
-                               sub_source=header["reviews_name"],
-                               message=None,
-                               type_error=None)
+            reviews["error"].extend(error)
 
-            else:
-                try:
-                    reviews["error"].append({
-                        "message": "Failed write to s3",
-                        "type": codes[str(response)],
-                        "id": header["detail_reviews"]["id_review"]
-                    })
-                except Exception as err:
-                    ic(err)
-                    ic(response)
-
-
-            # File.write_json(path, header)
-
-        for index, err in enumerate(reviews["error"]):
-            ic(reviews["error"])
-            if index+1 == len(reviews["error"]): status_condtion = 'done'
-            else: status_condtion = 'on progress'
-
-            self.__logs.logging(id_product=header["id"],
-                            id_review=err["id"],
-                            status_conditions=status_condtion,
-                            status_runtime='error',
-                            total=len(reviews["all_reviews"]),
-                            success=len(reviews["all_reviews"]) - len(reviews["error"]),
-                            failed=index+1,
-                            sub_source=header["reviews_name"],
-                            message=err["message"],
-                            type_error=err["type"])
-    
-        if not reviews["all_reviews"]:
-            self.__logs.logging(id_product=header["id"],
-                            id_review=None,
-                            status_conditions='done',
-                            status_runtime='success',
-                            total=len(reviews["all_reviews"]),
-                            success=len(reviews["all_reviews"]),
-                            failed=len(reviews["error"]),
-                            sub_source=header["reviews_name"],
-                            message=None,
-                            type_error=None)
-
-            
+        self.__logs.logsS3Err(func=self.__logs,
+                              header=header,
+                              reviews=reviews)
         ...
 
     def main(self):
@@ -234,10 +187,10 @@ class AppsApk:
 
             task_executor = []
             for app in apps:
-                task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
+                # task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
 
-                # self.__extract_reviews(PyQuery(app).attr('href'))
-            wait(task_executor)
+                self.__extract_reviews(PyQuery(app).attr('href'))
+            # wait(task_executor)
             if not apps: break
         self.__executor.shutdown(wait=True)
         ...

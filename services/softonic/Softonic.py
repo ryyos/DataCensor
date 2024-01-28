@@ -16,6 +16,7 @@ from dotenv import *
 from component import codes
 from server.s3 import ConnectionS3
 from library import SoftonicLibs
+from ApiRetrys import ApiRetry
 from utils import *
 
 
@@ -31,7 +32,12 @@ class Softonic:
                                  endpoint_url=os.getenv('ENDPOINT'),
                                  )
 
-        self.__executor = ThreadPoolExecutor(max_workers=3)
+        self.__api = ApiRetry(show_logs=True, 
+                              handle_forbidden=True, 
+                              redirect_url='https://en.softonic.com/', 
+                              defaulth_headers=True)
+        
+        self.__executor = ThreadPoolExecutor()
         self.__softonic = SoftonicLibs()
         self.__api = ApiRetry()
         
@@ -66,7 +72,7 @@ class Softonic:
         url_game = raw_game["url_game"]
 
         ... # mengambil Header baku
-        response = self.__api.retry(url=url_game, action='get', refresh=self.MAIN_URL)
+        response = self.__api.get(url=url_game)
         headers = PyQuery(response.text)
 
         descriptions = headers.find('article.editor-review')
@@ -116,7 +122,6 @@ class Softonic:
 
         logger.info(f'len reviews: {len(reviews["all_reviews"])}')
 
-        temporarys = []
         for index, review in enumerate(reviews["all_reviews"]):
             
             ...
@@ -155,6 +160,7 @@ class Softonic:
             path = f'{self.__softonic.create_dir(raw_data=raw_game, main_path="data")}/{detail_review["id_review"]}.json'
 
             raw_game.update({
+                "id": detail_game["id"],
                 "detail_reviews": detail_review,
                 "detail_applications": detail_game,
                 "reviews_name": detail_game["title"],
@@ -165,59 +171,20 @@ class Softonic:
             # response = self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
             File.write_json(path=path, content=raw_game)
             response = 200
+            if index in [2,5,6,4,9,6,11,12]: response = 404
 
-            if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
-            else: status_condtion = 'on progess'
+            error = self.__logs.logsS3(func=self.__logs,
+                               header=details,
+                               index=index,
+                               response=response,
+                               reviews=reviews)
 
-            ... # Logging
-            if response == 200 :
-                self.__logs.logging(id_product=detail_game["id"],
-                               id_review=detail_review["id_review"],
-                               status_conditions=status_condtion,
-                               status_runtime='success',
-                               total=len(reviews["all_reviews"]),
-                               success=index+1,
-                               failed=0,
-                               sub_source=detail_game["title"],
-                               message=None,
-                               type_error=None)
+            reviews["error"].extend(error)
 
-            else:
-                reviews["error"].append({
-                    "message": "Failed write to s3",
-                    "type": codes[str(response)],
-                    "id": detail_review["id_review"]
-                })
 
-                
-    
-        for index, err in enumerate(reviews["error"]):
-            if index+1 == len(reviews["error"]): status_condtion = 'done'
-            else: status_condtion = 'on progress'
-
-            self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
-                            id_review=None,
-                            status_conditions=status_condtion,
-                            status_runtime='error',
-                            total=len(reviews["all_reviews"]),
-                            success=len(reviews["all_reviews"])- len(reviews["error"]),
-                            failed=index+1,
-                            sub_source=detail_game["title"],
-                            message=err["message"],
-                            type_error=err["type"])
-    
-        if not reviews["all_reviews"]:
-            self.__logs.logging(id_product=crc32(vname(detail_game["title"]).encode('utf-8')),
-                            id_review=None,
-                            status_conditions='done',
-                            status_runtime='success',
-                            total=len(reviews["all_reviews"]),
-                            success=len(reviews["all_reviews"]),
-                            failed=len(reviews["error"]),
-                            sub_source=detail_game["title"],
-                            message=None,
-                            type_error=None)
-
+        self.__logs.logsS3Err(func=self.__logs,
+                              header=raw_game,
+                              reviews=reviews)
         ic({
             "len all review": len(reviews["all_reviews"])
         })
@@ -231,7 +198,7 @@ class Softonic:
 
     def __extract_game(self, url_game: str) -> None:
         ic(url_game)
-        response = self.__api.retry(url=url_game["url"].replace('/comments', ''), action='get', refresh=self.MAIN_URL)
+        response = self.__api.get(url=url_game["url"].replace('/comments', ''))
 
         results_header = {
             "link": self.MAIN_URL,
@@ -280,7 +247,7 @@ class Softonic:
                         self.__extract_game(igredation)
                         # task_executor.append(self.__executor.submit(self.__extract_game, igredation))
                         ...
-                    # wait(task_executor)
+                    wait(task_executor)
                     ...
                 ...
             ...
