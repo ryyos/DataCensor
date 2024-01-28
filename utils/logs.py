@@ -1,7 +1,11 @@
 import os
 
+from requests import Response
 from typing import List
 from time import strftime
+from typing import List
+from icecream import ic
+from component import codes
 
 from utils import *
 class Logs:
@@ -90,3 +94,65 @@ class Logs:
                 File.write_json(self.PATH_LOG, self.__logs)
                 
         ...
+
+    def logsS3(self, func: any, index: int, response: Response, header: dict, reviews: dict):
+
+        if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
+        else: status_condtion = 'on progess'
+        
+        if response == 200 :
+            ic(index)
+            ic(len(reviews["error"]))
+            func.logging(id_product=header["id"],
+                            id_review=header["detail_reviews"]["id_review"],
+                            status_conditions=status_condtion,
+                            status_runtime='success',
+                            total=len(reviews["all_reviews"]),
+                            success=index+1-len(reviews["error"]),
+                            failed=0,
+                            sub_source=header["reviews_name"],
+                            message=None,
+                            type_error=None)
+
+        else:
+            try:
+                reviews["error"].append({
+                    "message": "Failed write to s3",
+                    "type": codes[str(response)],
+                    "id": header["detail_reviews"]["id_review"]
+                })
+            except Exception as err:
+                ic(err)
+                ic(response)
+
+
+        # File.write_json(path, header)
+
+        for index, err in enumerate(reviews["error"]):
+            ic(reviews["error"])
+            if index+1 == len(reviews["error"]): status_condtion = 'done'
+            else: status_condtion = 'on progress'
+
+            func.logging(id_product=header["id"],
+                            id_review=err["id"],
+                            status_conditions=status_condtion,
+                            status_runtime='error',
+                            total=len(reviews["all_reviews"]),
+                            success=len(reviews["all_reviews"]) - len(reviews["error"]),
+                            failed=index+1,
+                            sub_source=header["reviews_name"],
+                            message=err["message"],
+                            type_error=err["type"])
+
+        if not reviews["all_reviews"]:
+            func.logging(id_product=header["id"],
+                            id_review=None,
+                            status_conditions='done',
+                            status_runtime='success',
+                            total=len(reviews["all_reviews"]),
+                            success=len(reviews["all_reviews"]),
+                            failed=len(reviews["error"]),
+                            sub_source=header["reviews_name"],
+                            message=None,
+                            type_error=None)
+
