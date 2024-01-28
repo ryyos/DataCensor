@@ -1,6 +1,6 @@
 [
   {
-    "Crawlling_time": "2024-01-28 23:11:01",
+    "Crawlling_time": "2024-01-29 02:33:15",
     "id_project": null,
     "project": "Data Intelligence",
     "sub_project": "data review",
@@ -8,22 +8,8 @@
     "sub_source_name": "McDonald's, Pekayon",
     "id_sub_source": 1455395409,
     "total_data": 1799,
-    "total_success": 1792,
-    "total_failed": 7,
-    "status": "done",
-    "assign": "Rio"
-  },
-  {
-    "Crawlling_time": "2024-01-28 23:13:07",
-    "id_project": null,
-    "project": "Data Intelligence",
-    "sub_project": "data review",
-    "source_name": "gofood.co.id",
-    "sub_source_name": "Dobel Martabak Bude, Pekayon",
-    "id_sub_source": 2621511284,
-    "total_data": 105,
-    "total_success": 12,
-    "total_failed": 0,
+    "total_success": 3,
+    "total_failed": 3,
     "status": "on progess",
     "assign": "Rio"
   }

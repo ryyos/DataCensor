@@ -95,12 +95,26 @@ class Logs:
                 
         ...
 
-    def logsS3(self, func: any, index: int, response: Response, header: dict, reviews: dict):
+    def logsS3(self, func: any, index: int, response: Response, header: dict, reviews: dict, total_err: int):
 
-        if index+1 == len(reviews["all_reviews"]) and not reviews["error"]: status_condtion = 'done'
+        if index+1 == len(reviews["all_reviews"]): status_condtion = 'done'
         else: status_condtion = 'on progess'
 
-        error = []
+        total_error = 0
+        if reviews["error"]:
+            for err in reviews["error"]:
+                func.logging(id_product=header["id"],
+                                id_review=header["detail_reviews"]["id_review"],
+                                status_conditions=status_condtion,
+                                status_runtime='error',
+                                total=len(reviews["all_reviews"]),
+                                success=0,
+                                failed=len(reviews["error"]),
+                                sub_source=header["reviews_name"],
+                                message=err["message"],
+                                type_error=err["type"])
+            
+            total_error+=len(reviews["error"])
         
         if response == 200 :
             func.logging(id_product=header["id"],
@@ -108,53 +122,43 @@ class Logs:
                             status_conditions=status_condtion,
                             status_runtime='success',
                             total=len(reviews["all_reviews"]),
-                            success=index+1-len(reviews["error"]),
-                            failed=0,
+                            success=index+1-total_err,
+                            failed=total_err,
                             sub_source=header["reviews_name"],
                             message=None,
                             type_error=None)
 
         else:
             try:
-                error.append({
-                    "message": "Failed write to s3",
-                    "type": codes[str(response)],
-                    "id": header["detail_reviews"]["id_review"]
-                })
+
+                total_error = 1
+                total_err+=total_error
+                func.logging(id_product=header["id"],
+                                id_review=header["detail_reviews"]["id_review"],
+                                status_conditions=status_condtion,
+                                status_runtime='error',
+                                total=len(reviews["all_reviews"]),
+                                success=index+1-total_err,
+                                failed=total_err,
+                                sub_source=header["reviews_name"],
+                                message="Failed write to s3",
+                                type_error=codes[str(response)])
+                
             except Exception as err:
                 ic(err)
                 ic(response)
 
-
+        return total_error
         # File.write_json(path, header)
-        return error
 
-    def logsS3Err(self, func: any, header: dict, reviews: dict):
-        ic(reviews["error"])
-        
-        for index, err in enumerate(reviews["error"]):
-            if index+1 == len(reviews["error"]): status_condtion = 'done'
-            else: status_condtion = 'on progress'
-
-            func.logging(id_product=header["id"],
-                            id_review=err["id"],
-                            status_conditions=status_condtion,
-                            status_runtime='error',
-                            total=len(reviews["all_reviews"]),
-                            success=len(reviews["all_reviews"]) - len(reviews["error"]),
-                            failed=index+1,
-                            sub_source=header["reviews_name"],
-                            message=err["message"],
-                            type_error=err["type"])
-
-        if not reviews["all_reviews"]:
+    def zero(self, func: any, header: dict):
             func.logging(id_product=header["id"],
                             id_review=None,
                             status_conditions='done',
                             status_runtime='success',
-                            total=len(reviews["all_reviews"]),
-                            success=len(reviews["all_reviews"]),
-                            failed=len(reviews["error"]),
+                            total=0,
+                            success=0,
+                            failed=0,
                             sub_source=header["reviews_name"],
                             message=None,
                             type_error=None)

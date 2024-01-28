@@ -122,6 +122,7 @@ class Softonic:
 
         logger.info(f'len reviews: {len(reviews["all_reviews"])}')
 
+        total_error = 0
         for index, review in enumerate(reviews["all_reviews"]):
             
             ...
@@ -173,18 +174,20 @@ class Softonic:
             response = 200
             if index in [2,5,6,4,9,6,11,12]: response = 404
 
-            error = self.__logs.logsS3(func=self.__logs,
-                               header=details,
+            error: int = self.__logs.logsS3(func=self.__logs,
+                               header=raw_game,
                                index=index,
                                response=response,
-                               reviews=reviews)
+                               reviews=reviews,
+                               total_err=total_error)
 
-            reviews["error"].extend(error)
+            total_error+=error
+            reviews["error"].clear()
 
-
-        self.__logs.logsS3Err(func=self.__logs,
-                              header=raw_game,
-                              reviews=reviews)
+        if not reviews["all_reviews"]:
+            self.__logs.zero(func=self.__logs,
+                             header=raw_game)
+            
         ic({
             "len all review": len(reviews["all_reviews"])
         })
@@ -244,8 +247,8 @@ class Softonic:
 
                         ic(igredation)
                         
-                        self.__extract_game(igredation)
-                        # task_executor.append(self.__executor.submit(self.__extract_game, igredation))
+                        # self.__extract_game(igredation)
+                        task_executor.append(self.__executor.submit(self.__extract_game, igredation))
                         ...
                     wait(task_executor)
                     ...

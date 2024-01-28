@@ -98,6 +98,7 @@ class Gofood:
 
         ic(len(reviews["all_reviews"]))
         
+        total_error = 0
         for index, comment in tqdm(enumerate(reviews["all_reviews"]), ascii=True, smoothing=0.1, total=len(reviews["all_reviews"])):
             detail_reviews = {
                 "id_review": comment["id"],
@@ -145,17 +146,19 @@ class Gofood:
 
             File.write_json(path=f'{path_data}/{detail_reviews["id_review"]}.json', content=raw_json)
 
-            error = self.__logs.logsS3(func=self.__logs,
+            error: int = self.__logs.logsS3(func=self.__logs,
                                header=raw_json,
                                index=index,
                                response=response,
-                               reviews=reviews)
+                               reviews=reviews,
+                               total_err=total_error)
 
-            reviews["error"].extend(error)
+            total_error+=error
+            reviews["error"].clear()
 
-        self.__logs.logsS3Err(func=self.__logs,
-                              header=raw_json,
-                              reviews=reviews)
+        if not reviews["all_reviews"]:
+            self.__logs.zero(func=self.__logs,
+                             header=raw_json)
         ...
 
     def __extract_restaurant(self, ingredient: dict):

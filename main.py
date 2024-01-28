@@ -3,9 +3,9 @@ from services import AppsApk
 from services import Gofood
 
 
-# if __name__=='__main__':
-#     sof = Softonic()
-#     sof.main()
+if __name__=='__main__':
+    sof = Softonic()
+    sof.main()
 
 # if __name__=='__main__':
 #     app = AppsApk()

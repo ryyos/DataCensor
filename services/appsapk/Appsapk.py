@@ -110,7 +110,7 @@ class AppsApk:
 
         reviews: dict = self.__appsapk.collect_reviews(url_app)
 
-        ic(len(reviews["all_reviews"]))
+        total_error = 0
         for index, review in enumerate(reviews["all_reviews"]):
             
             header.update({
@@ -164,17 +164,19 @@ class AppsApk:
             response = 200
             if index in [2,5,6,4,9,6,11,12]: response = 404
 
-            error = self.__logs.logsS3(func=self.__logs,
+            error: int = self.__logs.logsS3(func=self.__logs,
                                header=header,
                                index=index,
                                response=response,
-                               reviews=reviews)
+                               reviews=reviews,
+                               total_err=total_error)
 
-            reviews["error"].extend(error)
+            total_error+=error
+            reviews["error"].clear()
 
-        self.__logs.logsS3Err(func=self.__logs,
-                              header=header,
-                              reviews=reviews)
+        if not reviews["all_reviews"]:
+            self.__logs.zero(func=self.__logs,
+                             header=header)
         ...
 
     def main(self):
@@ -187,10 +189,10 @@ class AppsApk:
 
             task_executor = []
             for app in apps:
-                # task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
+                task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
 
-                self.__extract_reviews(PyQuery(app).attr('href'))
-            # wait(task_executor)
+                # self.__extract_reviews(PyQuery(app).attr('href'))
+            wait(task_executor)
             if not apps: break
         self.__executor.shutdown(wait=True)
         ...
