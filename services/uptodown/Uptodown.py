@@ -1,0 +1,3 @@
+class Uptodown:
+    def __init__(self) -> None:
+        ...

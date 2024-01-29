@@ -1,0 +1,3 @@
+class UptodownLibs:
+    def __init__(self) -> None:
+        ...

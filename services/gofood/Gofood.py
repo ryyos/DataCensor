@@ -48,7 +48,7 @@ class Gofood:
         self.__datas: List[dict] = []
         self.__monitorings: List[dict] = []
 
-        self.VERSION = '9.0.0'
+        self.VERSION = '9.0.1'
 
         self.DOMAIN = 'gofood.co.id'
         self.MAIN_URL = 'https://gofood.co.id'
@@ -90,8 +90,8 @@ class Gofood:
         
         details: dict = self.__gofood.write_detail(raw_json)
 
-        # self.__s3.upload(key=details["path_detail"], body=details["data_detail"], bucket=self._bucket)
-        File.write_json(path=details["path_detail"], content=details["data_detail"])
+        self.__s3.upload(key=details["path_detail"], body=details["data_detail"], bucket=self._bucket)
+        # File.write_json(path=details["path_detail"], content=details["data_detail"])
 
         reviews: dict = self.__gofood.collect_reviews(raw_json)
         raw_json["total_reviews"] = len(reviews["all_reviews"])
@@ -140,11 +140,9 @@ class Gofood:
                 "path_data_clean": f'S3://ai-pipeline-statistics/{convert_path(path_data)}/{detail_reviews["id_review"]}.json'
             })
 
-            # response = self.__s3.upload(key=path_data, body=raw_json, bucket=self._bucket)
-            response = 200
-            if index in [2,5,6,4,9,6,11,12]: response = 404
+            response = self.__s3.upload(key=f'{path_data}/{detail_reviews["id_review"]}.json', body=raw_json, bucket=self._bucket)
 
-            File.write_json(path=f'{path_data}/{detail_reviews["id_review"]}.json', content=raw_json)
+            # File.write_json(path=f'{path_data}/{detail_reviews["id_review"]}.json', content=raw_json)
 
             error: int = self.__logs.logsS3(func=self.__logs,
                                header=raw_json,

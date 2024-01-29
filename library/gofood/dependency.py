@@ -11,7 +11,7 @@ class GofoodLibs:
     def __init__(self) -> None:
         self.__api = ApiRetry(show_logs=True, handle_forbidden=True, redirect_url='https://gofood.co.id', defaulth_headers=True)
 
-        self.VERSION = '9.0.0'
+        self.VERSION = '9.0.1'
         self.FOODS_API = f'https://gofood.co.id/api/outlets'
         self.API_REVIEW_PAGE = 'https://gofood.co.id/api/outlets/'
         ...

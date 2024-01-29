@@ -21,8 +21,7 @@ class ConnectionS3:
 
     def upload(self, key: str, body: dict, bucket: str) -> int:
         response: dict = self.__s3.put_object(Bucket=bucket, Key=key, Body=dumps(body, indent=2, ensure_ascii=False))
-
-        ic(response)
+        
         return response['ResponseMetadata']['HTTPStatusCode']
 
 
