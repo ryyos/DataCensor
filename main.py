@@ -1,6 +1,7 @@
 from services import Softonic
 from services import AppsApk
 from services import Gofood
+from services import Uptodown
 
 
 # if __name__=='__main__':
@@ -11,6 +12,10 @@ from services import Gofood
 #     app = AppsApk()
 #     app.main()
 
+# if __name__=='__main__':
+#     go = Gofood()
+#     go.main()
+
 if __name__=='__main__':
-    go = Gofood()
-    go.main()
+    up = Uptodown()
+    up.main()
