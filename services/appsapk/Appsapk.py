@@ -96,8 +96,8 @@ class AppsApk:
         })
 
         try:
-            # response = self.__s3.upload(key=path_detail, body=results, bucket=self._bucket)
-            self.__appsapk.write_detail(headers=results)
+            response = self.__s3.upload(key=path_detail, body=results, bucket=self._bucket)
+            # self.__appsapk.write_detail(headers=results)
         except Exception as err:
             ic(err)
 
@@ -160,16 +160,15 @@ class AppsApk:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            # response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
-            response = 200
-            if index in [2,5,6,4,9,6,11,12]: response = 404
-
+            response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
+            # if index in [2,5,6,4,9,6,11,12]: response = 404
             error: int = self.__logs.logsS3(func=self.__logs,
                                header=header,
                                index=index,
                                response=response,
                                reviews=reviews,
                                total_err=total_error)
+
 
             total_error+=error
             reviews["error"].clear()

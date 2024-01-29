@@ -116,7 +116,6 @@ class GofoodLibs:
                 page_token = response.json()["nextPageToken"]
                 ic(response.json()["nextPageToken"])
                 if page_token == '': break
-                break
 
             except Exception as err:
                 ic(err)

@@ -3,7 +3,6 @@ import os
 from requests import Response
 from typing import List
 from time import strftime
-from typing import List
 from icecream import ic
 from component import codes
 
@@ -152,13 +151,23 @@ class Logs:
         # File.write_json(path, header)
 
     def zero(self, func: any, header: dict):
-            func.logging(id_product=header["id"],
-                            id_review=None,
-                            status_conditions='done',
-                            status_runtime='success',
-                            total=0,
-                            success=0,
-                            failed=0,
-                            sub_source=header["reviews_name"],
-                            message=None,
-                            type_error=None)
+            datas = File.read_json(func.PATH_MONITORING)
+
+            write = False
+            for data in datas:
+                if data["id_sub_source"] == header["id"]:
+                    write = True
+
+            if not write:
+                func.logging(id_product=header["id"],
+                                id_review=None,
+                                status_conditions='done',
+                                status_runtime='success',
+                                total=0,
+                                success=0,
+                                failed=0,
+                                sub_source=header["reviews_name"],
+                                message=None,
+                                type_error=None)
+
+            
