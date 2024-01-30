@@ -68,7 +68,7 @@ class UptodownLibs:
         ...
 
     def filter_total_review(self, text: str) -> int:
-        try: return text.strip().split(' ')[0]
+        try: return int(text.strip().split(' ')[0])
         except Exception: return None
         ...
 

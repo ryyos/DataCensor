@@ -180,7 +180,7 @@ class Uptodown:
             "author": html.find('div.autor a').text(),
             "descriptions": html.find('div.text-description p').text(),
             "technical-information": {
-                PyQuery(key).find('td:nth-child(2)').text(): PyQuery(key).find('td:last-child').text() for key in html.find('#technical-information tr')
+                PyQuery(key).find('td:nth-child(2)').text(): vtext(PyQuery(key).find('td:last-child').text()) for key in html.find('#technical-information tr')
             },
             "previous_version": [
                 {
@@ -229,9 +229,6 @@ class Uptodown:
                 wait(task_executor)
         
         self.__executor.shutdown(wait=True)
-                    
-
-
 
         ...
     

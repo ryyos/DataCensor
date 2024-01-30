@@ -2,6 +2,7 @@ from services import Softonic
 from services import AppsApk
 from services import Gofood
 from services import Uptodown
+from services import JobPlanet
 
 
 # if __name__=='__main__':
@@ -16,6 +17,10 @@ from services import Uptodown
 #     go = Gofood()
 #     go.main()
 
+# if __name__=='__main__':
+#     up = Uptodown()
+#     up.main()
+
 if __name__=='__main__':
-    up = Uptodown()
-    up.main()
+    job = JobPlanet()
+    job.main()
