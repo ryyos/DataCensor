@@ -20,7 +20,7 @@ class AppsApkLibs:
         ...
             
     def write_detail(self, headers: dict):
-        path_detail = f'{create_dir(headers=headers, website="appsapk")}/detail/{vname(headers["reviews_name"])}.json'
+        path_detail = f'{create_dir(headers=headers, website="appsapk")}/detail/{Dekimashita.vname(headers["reviews_name"])}.json'
 
         headers.update({
             "path_data_raw": path_detail,

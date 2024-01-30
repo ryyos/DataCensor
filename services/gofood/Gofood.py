@@ -188,7 +188,7 @@ class Gofood:
 
 
                     header_required = {
-                        "id": crc32(vname(food_review.json()["pageProps"]["outlet"]["core"]["displayName"]).encode('utf-8')),
+                        "id": crc32(Dekimashita.vname(food_review.json()["pageProps"]["outlet"]["core"]["displayName"]).encode('utf-8')),
                         "link": self.MAIN_URL+food_review.json()["pageProps"].get("outletUrl"),
                         "domain": self.DOMAIN,
                         "tags": [tag["displayName"] for tag in food_review.json()["pageProps"]["outlet"]["core"]["tags"]],

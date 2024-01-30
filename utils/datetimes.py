@@ -18,3 +18,7 @@ def now():
 def today():
     return datetime.now().strftime("%Y-%m-%d")
     ...
+
+def change_format(dates: str) -> str:
+    try: return dates.replace('T', ' ')
+    except Exception: return dates

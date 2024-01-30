@@ -100,9 +100,9 @@ class UptodownLibs:
         ...
 
     def create_dir(self, header: dict, component: dict) -> str:
-        try: os.makedirs(f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{vname(header["reviews_name"].lower())}/json/detail')
+        try: os.makedirs(f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{Dekimashita.vname(header["reviews_name"].lower())}/json/detail')
         except Exception: ...
-        finally: return f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{vname(header["reviews_name"].lower())}/json'
+        finally: return f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{Dekimashita.vname(header["reviews_name"].lower())}/json'
         ...
 
     def get_reply(self, url_app: str, id: int) -> List[str]:

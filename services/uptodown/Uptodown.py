@@ -109,7 +109,7 @@ class Uptodown:
         ic(len(all_reviews))
         for index, review in tqdm(enumerate(all_reviews), smoothing=0.1, total=len(all_reviews)):
 
-            path = f'{self.__uptodown.create_dir(header, header)}/{vname(review["username_reviews"].lower())}.json'
+            path = f'{self.__uptodown.create_dir(header, header)}/{Dekimashita.vname(review["username_reviews"].lower())}.json'
 
             header.update({
                 "detail_reviews": review,
@@ -180,7 +180,7 @@ class Uptodown:
             "author": html.find('div.autor a').text(),
             "descriptions": html.find('div.text-description p').text(),
             "technical-information": {
-                PyQuery(key).find('td:nth-child(2)').text(): vtext(PyQuery(key).find('td:last-child').text()) for key in html.find('#technical-information tr')
+                PyQuery(key).find('td:nth-child(2)').text(): Dekimashita.vtext(PyQuery(key).find('td:last-child').text()) for key in html.find('#technical-information tr')
             },
             "previous_version": [
                 {
@@ -191,7 +191,7 @@ class Uptodown:
             ]
         }
 
-        path_detail = f'{self.__uptodown.create_dir(header, component)}/detail/{vname(header["reviews_name"].lower())}.json'
+        path_detail = f'{self.__uptodown.create_dir(header, component)}/detail/{Dekimashita.vname(header["reviews_name"].lower())}.json'
 
         header.update({
             "path_data_raw": 'S3://ai-pipeline-statistics/'+path_detail,

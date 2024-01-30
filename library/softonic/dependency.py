@@ -69,9 +69,9 @@ class SoftonicLibs:
         return f'{self.DISQUS_API_COMMENT}/?base=default&f=en-softonic-com&t_u={url_apk}/comments&t_d={name_apk}&s_o=default#version=cb3f36bfade5c758ef967a494d077f95'
         ...
     def create_dir(self, raw_data: dict, main_path: str) -> str:
-        try: os.makedirs(f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json/detail')
+        try: os.makedirs(f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{Dekimashita.vname(raw_data["reviews_name"].lower())}/json/detail')
         except Exception: ...
-        finally: return f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{vname(raw_data["reviews_name"].lower())}/json'
+        finally: return f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{Dekimashita.vname(raw_data["reviews_name"].lower())}/json'
         ...
 
     def get_reviews(self, url_game: str):
@@ -160,7 +160,7 @@ class SoftonicLibs:
         headers["reviews_name"] = detail_game["title"]
         ic(headers["reviews_name"])
 
-        path_detail = f'{self.create_dir(raw_data=headers, main_path="data")}/detail/{vname(detail_game["title"])}.json'
+        path_detail = f'{self.create_dir(raw_data=headers, main_path="data")}/detail/{Dekimashita.vname(detail_game["title"])}.json'
 
         headers.update({
             "id": detail_game["id"],

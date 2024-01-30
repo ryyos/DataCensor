@@ -94,7 +94,7 @@ class Softonic:
                 descs[-1]["sub_description"].append(text)
 
         detail_game = {
-            "id": crc32(vname(headers.find('head > title').text().split(' - ')[0]).encode('utf-8')),
+            "id": crc32(Dekimashita.vname(headers.find('head > title').text().split(' - ')[0]).encode('utf-8')),
             "title": headers.find('head > title').text().split(' - ')[0],
             "version": PyQuery(headers.find('li[data-meta="version"]')[-1]).text().replace('V ', '') if headers.find('li[data-meta="version"]') else None,
             "language": PyQuery(headers.find('ul[class="app-header__features"] > li[class="app-header__item"]')[1]).text(),

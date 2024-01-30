@@ -18,9 +18,9 @@ class GofoodLibs:
 
 
     def create_dir(self, raw_data: dict) -> str:
-        try: os.makedirs(f'data/data_raw/data_review/gofood/{raw_data["location_review"]}/{raw_data["location_restaurant"]["area"]}/{vname(raw_data["reviews_name"].lower())}/json/detail')
+        try: os.makedirs(f'data/data_raw/data_review/gofood/{raw_data["location_review"]}/{raw_data["location_restaurant"]["area"]}/{Dekimashita.vname(raw_data["reviews_name"].lower())}/json/detail')
         except Exception: ...
-        finally: return f'data/data_raw/data_review/gofood/{raw_data["location_review"]}/{raw_data["location_restaurant"]["area"]}/{vname(raw_data["reviews_name"].lower())}/json'
+        finally: return f'data/data_raw/data_review/gofood/{raw_data["location_review"]}/{raw_data["location_restaurant"]["area"]}/{Dekimashita.vname(raw_data["reviews_name"].lower())}/json'
         ...
 
     def collect_cities(self, url: str) -> List[str]:
@@ -30,14 +30,14 @@ class GofoodLibs:
         ...
         
     def create_card(self, city: str, pieces: dict) -> str:
-        return f'/{city}/restaurant/{vname(pieces["core"]["displayName"].lower()).replace("--", "-")}-{pieces["core"]["key"].split("/")[-1]}'
+        return f'/{city}/restaurant/{Dekimashita.vname(pieces["core"]["displayName"].lower()).replace("--", "-")}-{pieces["core"]["key"].split("/")[-1]}'
         ...
 
     def write_detail(self, headers: dict):
         headers["reviews_name"] = headers["reviews_name"]
         ic(headers["reviews_name"])
 
-        path_detail = f'{self.create_dir(raw_data=headers)}/detail/{vname(headers["reviews_name"])}.json'
+        path_detail = f'{self.create_dir(raw_data=headers)}/detail/{Dekimashita.vname(headers["reviews_name"])}.json'
 
         headers.update({
             "path_data_raw": 'S3://ai-pipeline-statistics/'+path_detail,

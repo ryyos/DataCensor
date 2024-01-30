@@ -34,3 +34,5 @@ from services import MisterAladin
 if __name__=='__main__':
     aladin = MisterAladin()
     aladin.main()
+
+

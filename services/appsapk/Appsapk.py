@@ -57,7 +57,7 @@ class AppsApk:
         results = {
             "link": self.MAIN_URL,
             "domain": self.MAIN_DOMAIN,
-            "id": crc32(vname(app.find('h1[class="entry-title"]').text()).encode('utf-8')),
+            "id": crc32(Dekimashita.vname(app.find('h1[class="entry-title"]').text()).encode('utf-8')),
             "tags": [PyQuery(tag).text() for tag in app.find('a[rel="tag"]')],
             "crawling_time": strftime('%Y-%m-%d %H:%M:%S'),
             "crawling_time_epoch": int(time()),
@@ -78,7 +78,7 @@ class AppsApk:
             ]
             },
             "detail_application": {
-                vname(PyQuery(detail).find('strong').text()): vtext(PyQuery(detail).text().replace(PyQuery(detail).find('strong').text(), '').replace('\n', ''))\
+                Dekimashita.vname(PyQuery(detail).find('strong').text()): Dekimashita.vtext(PyQuery(detail).text().replace(PyQuery(detail).find('strong').text(), '').replace('\n', ''))\
                 for detail in app.find('div[class="details"]')
             }
         }
@@ -87,7 +87,7 @@ class AppsApk:
             "descriptions": app.find('#description').text()
         })
 
-        path_detail = f'{create_dir(headers=results, website="appsapk")}/detail/{vname(results["reviews_name"])}.json'
+        path_detail = f'{create_dir(headers=results, website="appsapk")}/detail/{Dekimashita.vname(results["reviews_name"])}.json'
 
         results["tags"].append(self.MAIN_DOMAIN)
         results.update({
@@ -115,7 +115,7 @@ class AppsApk:
             
             header.update({
                 "detail_reviews": {
-                "id_review": crc32(vname(PyQuery(list(PyQuery(review).find('div[class="comment-author vcard"] > b'))[0]).text()).encode('utf-8')),
+                "id_review": crc32(Dekimashita.vname(PyQuery(list(PyQuery(review).find('div[class="comment-author vcard"] > b'))[0]).text()).encode('utf-8')),
                 "username_reviews": PyQuery(list(PyQuery(review).find('div[class="comment-author vcard"] > b'))[0]).text(),
                 "image_reviews": PyQuery(review).find('div[class="app-icon"]').attr('src'),
                 "created_time": PyQuery(list(PyQuery(review).find('div[class="comment-metadata"] time'))[0]).attr('datetime').split('+')[0].replace('T', ' '),
@@ -134,7 +134,7 @@ class AppsApk:
                 "total_likes_reviews": None,
                 "total_dislikes_reviews": None,
                 "total_reply_reviews": 0,
-                "content_reviews": vtext(PyQuery(list(PyQuery(review).find('div[class="comment-content"]'))[0]).text()),
+                "content_reviews": Dekimashita.vtext(PyQuery(list(PyQuery(review).find('div[class="comment-content"]'))[0]).text()),
                 "reply_content_reviews": [],
                 "date_of_experience": PyQuery(list(PyQuery(review).find('div[class="comment-metadata"] time'))[0]).attr('datetime').split('+')[0].replace('T', ' '),
                 "date_of_experience_epoch": convert_time(PyQuery(list(PyQuery(review).find('div[class="comment-metadata"] time'))[0]).attr('datetime'))
@@ -150,10 +150,10 @@ class AppsApk:
                     header["detail_reviews"]["total_reply_reviews"] +=1
                     header["detail_reviews"]["reply_content_reviews"].append({
                         "username_reply_reviews": PyQuery(reply).find('div[class="comment-author vcard"] > b').text(),
-                        "content_reviews": vtext(PyQuery(reply).find('div[class="comment-content"]').text())
+                        "content_reviews": Dekimashita.vtext(PyQuery(reply).find('div[class="comment-content"]').text())
                     })
 
-            path = f'{create_dir(headers=header, website="appsapk")}/{vname(header["detail_reviews"]["username_reviews"])}.json'
+            path = f'{create_dir(headers=header, website="appsapk")}/{Dekimashita.vname(header["detail_reviews"]["username_reviews"])}.json'
 
             header.update({
                 "path_data_raw": 'S3://ai-pipeline-statistics/'+path,
