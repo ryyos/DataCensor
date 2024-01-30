@@ -4,6 +4,7 @@ from services import Gofood
 from services import Uptodown
 from services import JobPlanet
 from services import Glassdor
+from services import MisterAladin
 
 
 # if __name__=='__main__':
@@ -26,7 +27,10 @@ from services import Glassdor
 #     job = JobPlanet()
 #     job.main()
 
-if __name__=='__main__':
-    glass = Glassdor()
-    glass.main()
+# if __name__=='__main__':
+#     glass = Glassdor()
+#     glass.main()
     
+if __name__=='__main__':
+    aladin = MisterAladin()
+    aladin.main()

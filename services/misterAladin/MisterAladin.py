@@ -1,6 +1,7 @@
 import os
 
 from pyquery import PyQuery
+from library import MisterAladinLibs
 from time import time
 from icecream import ic
 
@@ -12,8 +13,14 @@ class MisterAladin:
         self.MAIN_URL = 'https://www.misteraladin.com/'
         self.DOMAIN = 'www.misteraladin.com'
 
+        self.__aladin = MisterAladinLibs()
         ...
 
     def main(self) -> None:
         
-        while True
+        city = 0
+        while True:
+            hotels = self.__aladin.collect_hotels('https://www.misteraladin.com/hotel/city/14/')
+
+            ic(hotels)
+            break
