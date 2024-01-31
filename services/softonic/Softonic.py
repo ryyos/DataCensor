@@ -17,6 +17,8 @@ from component import codes
 from server.s3 import ConnectionS3
 from library import SoftonicLibs
 from ApiRetrys import ApiRetry
+from dekimashita import Dekimashita
+
 from utils import *
 
 
@@ -94,7 +96,7 @@ class Softonic:
                 descs[-1]["sub_description"].append(text)
 
         detail_game = {
-            "id": crc32(Dekimashita.vname(headers.find('head > title').text().split(' - ')[0]).encode('utf-8')),
+            "id": crc32(Dekimashita.vdir(headers.find('head > title').text().split(' - ')[0]).encode('utf-8')),
             "title": headers.find('head > title').text().split(' - ')[0],
             "version": PyQuery(headers.find('li[data-meta="version"]')[-1]).text().replace('V ', '') if headers.find('li[data-meta="version"]') else None,
             "language": PyQuery(headers.find('ul[class="app-header__features"] > li[class="app-header__item"]')[1]).text(),
@@ -178,7 +180,8 @@ class Softonic:
                                header=raw_game,
                                index=index,
                                response=response,
-                               reviews=reviews,
+                               all_reviews=reviews["all_reviews"],
+                               error=reviews["error"],
                                total_err=total_error)
 
             total_error+=error

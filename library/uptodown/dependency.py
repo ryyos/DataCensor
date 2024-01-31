@@ -2,6 +2,7 @@ import requests
 import os
 
 from ApiRetrys import ApiRetry
+from dekimashita import Dekimashita
 from requests import Response
 from pyquery import PyQuery
 from fake_useragent import FakeUserAgent
@@ -100,9 +101,9 @@ class UptodownLibs:
         ...
 
     def create_dir(self, header: dict, component: dict) -> str:
-        try: os.makedirs(f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{Dekimashita.vname(header["reviews_name"].lower())}/json/detail')
+        try: os.makedirs(f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{Dekimashita.vdir(header["reviews_name"].lower())}/json/detail')
         except Exception: ...
-        finally: return f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{Dekimashita.vname(header["reviews_name"].lower())}/json'
+        finally: return f'data/data_raw/data_review/uptodown/{component["platform"]}/{component["type"]}/{Dekimashita.vdir(header["reviews_name"].lower())}/json'
         ...
 
     def get_reply(self, url_app: str, id: int) -> List[str]:

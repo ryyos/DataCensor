@@ -4,6 +4,7 @@ import requests
 from pyquery import PyQuery
 from requests import Response
 from library import MisterAladinLibs
+from dekimashita import Dekimashita
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import List
 from time import time
@@ -73,8 +74,8 @@ class MisterAladin:
                 all_reviews.extend(reviews)
                 ...
 
-            for review in all_reviews:
-
+            total_error = 0
+            for index, review in enumerate(all_reviews):
 
                 path = f'{self.__aladin.create_dir(headers)}/{review["username_reviews"]}.json'
                 
@@ -85,7 +86,20 @@ class MisterAladin:
                     "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
                 })
 
+                # response: int = self.__aladin.__s3.upload(path, headers, self.__aladin.bucket)
+
+                # self.__aladin.__logs.logsS3(func=self.__aladin.__logs,
+                #                             all_reviews=all_reviews,
+                #                             error=error,
+                #                             header=headers,
+                #                             index=index,
+                #                             response=response,
+                #                             total_err=total_error)
+
                 File.write_json(path, Dekimashita.vdict(headers, ['\n', '\u002F', '\\', 'u002F']))
+
+            # self.__aladin.__logs.zero(func=self.__aladin.__logs,
+            #                           header=headers)
         
         ...
 
@@ -122,7 +136,7 @@ class MisterAladin:
             }
         }
 
-        path_detail = f'{self.__aladin.create_dir(headers)}/detail/{Dekimashita.vname(headers["reviews_name"]).lower()}.json'
+        path_detail = f'{self.__aladin.create_dir(headers)}/detail/{Dekimashita.vdir(headers["reviews_name"]).lower()}.json'
         headers.update({
             "path_data_raw": 'S3://ai-pipeline-statistics/'+path_detail,
             "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path_detail)
@@ -154,10 +168,10 @@ class MisterAladin:
                 task_executor = []
                 for hotel in tqdm(hotels, ascii=True, smoothing=0.1, total=len(hotels)):
 
-                    task_executor.append(self.__executor.submit(self.extract_hotel, hotel))
-                    # self.extract_hotel(hotel)
+                    # task_executor.append(self.__executor.submit(self.extract_hotel, hotel))
+                    self.extract_hotel(hotel)
                 
-                wait(task_executor)
+                # wait(task_executor)
 
 
 

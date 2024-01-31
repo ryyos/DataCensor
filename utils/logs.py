@@ -94,33 +94,33 @@ class Logs:
                 
         ...
 
-    def logsS3(self, func: any, index: int, response: Response, header: dict, reviews: dict, total_err: int):
+    def logsS3(self, func: any, index: int, response: Response, header: dict, total_err: int, error: List, all_reviews: List):
 
-        if index+1 == len(reviews["all_reviews"]): status_condtion = 'done'
+        if index+1 == len(all_reviews): status_condtion = 'done'
         else: status_condtion = 'on progess'
 
         total_error = 0
-        if reviews["error"]:
-            for err in reviews["error"]:
+        if error:
+            for err in error:
                 func.logging(id_product=header["id"],
                                 id_review=header["detail_reviews"]["id_review"],
                                 status_conditions=status_condtion,
                                 status_runtime='error',
-                                total=len(reviews["all_reviews"]),
+                                total=len(all_reviews),
                                 success=0,
-                                failed=len(reviews["error"]),
+                                failed=len(error),
                                 sub_source=header["reviews_name"],
                                 message=err["message"],
                                 type_error=err["type"])
             
-            total_error+=len(reviews["error"])
+            total_error+=len(error)
         
         if response == 200 :
             func.logging(id_product=header["id"],
                             id_review=header["detail_reviews"]["id_review"],
                             status_conditions=status_condtion,
                             status_runtime='success',
-                            total=len(reviews["all_reviews"]),
+                            total=len(all_reviews),
                             success=index+1-total_err,
                             failed=total_err,
                             sub_source=header["reviews_name"],
@@ -136,7 +136,7 @@ class Logs:
                                 id_review=header["detail_reviews"]["id_review"],
                                 status_conditions=status_condtion,
                                 status_runtime='error',
-                                total=len(reviews["all_reviews"]),
+                                total=len(all_reviews),
                                 success=index+1-total_err,
                                 failed=total_err,
                                 sub_source=header["reviews_name"],

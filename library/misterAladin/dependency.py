@@ -2,7 +2,10 @@ import os
 
 from requests import Response
 from ApiRetrys import ApiRetry
+from dekimashita import Dekimashita
 from pyquery import PyQuery
+from server.s3 import ConnectionS3
+from dotenv import load_dotenv
 from typing import List
 from icecream import ic
 
@@ -18,6 +21,17 @@ class MisterAladinLibs:
         self.MAIN_URL = 'https://www.misteraladin.com'
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True, redirect_url=self.MAIN_URL, handle_forbidden=True)
+
+        self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
+                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
+                                 endpoint_url=os.getenv('ENDPOINT'),
+                                 )
+
+        self.__logs = Logs(path_monitoring='logs/misteraladin/monitoring_data.json',
+                            path_log='logs/misteraladin/monitoring_logs.json',
+                            domain='www.misteraladin.com')
+        
+        self.bucket = os.getenv('BUCKET')
         ...
 
     def build_payload(self, page: int, city_id: int) -> dict[str, any]:
@@ -106,7 +120,7 @@ class MisterAladinLibs:
         ...
 
     def create_dir(self, headers: dict) -> str:
-        try: os.makedirs(f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vname(headers["reviews_name"].lower())}/json/detail')
+        try: os.makedirs(f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vtext(headers["reviews_name"].lower().replace(" ", "_"))}/json/detail')
         except Exception: ...
-        finally: return f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vname(headers["reviews_name"].lower())}/json'
+        finally: return f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vtext(headers["reviews_name"].lower().replace(" ", "_"))}/json'
         ...

@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, wait
 from server.s3 import ConnectionS3
+from dekimashita import Dekimashita
+
 from utils import *
 
 class Uptodown:
@@ -109,7 +111,7 @@ class Uptodown:
         ic(len(all_reviews))
         for index, review in tqdm(enumerate(all_reviews), smoothing=0.1, total=len(all_reviews)):
 
-            path = f'{self.__uptodown.create_dir(header, header)}/{Dekimashita.vname(review["username_reviews"].lower())}.json'
+            path = f'{self.__uptodown.create_dir(header, header)}/{Dekimashita.vdir(review["username_reviews"].lower())}.json'
 
             header.update({
                 "detail_reviews": review,
@@ -122,23 +124,24 @@ class Uptodown:
             #                             bucket=self.__bucket)
 
             response = 200
-            # if index in [2,5,6,4,9,6,11,12]: response = 404
+            if index in [2,5,6,4,9,6,11,12]: response = 404
 
             File.write_json(path, header)
             
-        #     error: int = self.__logs.logsS3(func=self.__logs,
-        #                        header=header,
-        #                        index=index,
-        #                        response=response,
-        #                        reviews=reviews,
-        #                        total_err=total_error)
+            error: int = self.__logs.logsS3(func=self.__logs,
+                               header=header,
+                               index=index,
+                               response=response,
+                               all_reviews=all_reviews,
+                               error=reviews["error"],
+                               total_err=total_error)
 
-        #     total_error+=error
-        #     reviews["error"].clear()
+            total_error+=error
+            reviews["error"].clear()
 
-        # if not all_reviews:
-        #     self.__logs.zero(func=self.__logs,
-        #                      header=header)
+        if not all_reviews:
+            self.__logs.zero(func=self.__logs,
+                             header=header)
         
         ...
 
@@ -191,7 +194,7 @@ class Uptodown:
             ]
         }
 
-        path_detail = f'{self.__uptodown.create_dir(header, component)}/detail/{Dekimashita.vname(header["reviews_name"].lower())}.json'
+        path_detail = f'{self.__uptodown.create_dir(header, component)}/detail/{Dekimashita.vdir(header["reviews_name"].lower())}.json'
 
         header.update({
             "path_data_raw": 'S3://ai-pipeline-statistics/'+path_detail,
@@ -224,8 +227,8 @@ class Uptodown:
                         "app": app
                     }
 
-                    # self.extract_detail(component)
-                    task_executor.append(self.__executor.submit(self.extract_detail, component))
+                    self.extract_detail(component)
+                    # task_executor.append(self.__executor.submit(self.extract_detail, component))
                 wait(task_executor)
         
         self.__executor.shutdown(wait=True)

@@ -1,4 +1,3 @@
-from .corrector import Dekimashita
 from .datetimes import *
 from .directory import convert_path, create_dir
 from .fileIO import File

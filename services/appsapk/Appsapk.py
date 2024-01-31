@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from time import strftime, sleep, time
 from icecream import ic
 from pyquery import PyQuery
+from dekimashita import Dekimashita
 from requests import Session, Response
 from fake_useragent import FakeUserAgent
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -57,7 +58,7 @@ class AppsApk:
         results = {
             "link": self.MAIN_URL,
             "domain": self.MAIN_DOMAIN,
-            "id": crc32(Dekimashita.vname(app.find('h1[class="entry-title"]').text()).encode('utf-8')),
+            "id": crc32(Dekimashita.vdir(app.find('h1[class="entry-title"]').text()).encode('utf-8')),
             "tags": [PyQuery(tag).text() for tag in app.find('a[rel="tag"]')],
             "crawling_time": strftime('%Y-%m-%d %H:%M:%S'),
             "crawling_time_epoch": int(time()),
@@ -78,7 +79,7 @@ class AppsApk:
             ]
             },
             "detail_application": {
-                Dekimashita.vname(PyQuery(detail).find('strong').text()): Dekimashita.vtext(PyQuery(detail).text().replace(PyQuery(detail).find('strong').text(), '').replace('\n', ''))\
+                Dekimashita.vdir(PyQuery(detail).find('strong').text()): Dekimashita.vtext(PyQuery(detail).text().replace(PyQuery(detail).find('strong').text(), '').replace('\n', ''))\
                 for detail in app.find('div[class="details"]')
             }
         }
@@ -87,7 +88,7 @@ class AppsApk:
             "descriptions": app.find('#description').text()
         })
 
-        path_detail = f'{create_dir(headers=results, website="appsapk")}/detail/{Dekimashita.vname(results["reviews_name"])}.json'
+        path_detail = f'{create_dir(headers=results, website="appsapk")}/detail/{Dekimashita.vdir(results["reviews_name"])}.json'
 
         results["tags"].append(self.MAIN_DOMAIN)
         results.update({
@@ -115,7 +116,7 @@ class AppsApk:
             
             header.update({
                 "detail_reviews": {
-                "id_review": crc32(Dekimashita.vname(PyQuery(list(PyQuery(review).find('div[class="comment-author vcard"] > b'))[0]).text()).encode('utf-8')),
+                "id_review": crc32(Dekimashita.vdir(PyQuery(list(PyQuery(review).find('div[class="comment-author vcard"] > b'))[0]).text()).encode('utf-8')),
                 "username_reviews": PyQuery(list(PyQuery(review).find('div[class="comment-author vcard"] > b'))[0]).text(),
                 "image_reviews": PyQuery(review).find('div[class="app-icon"]').attr('src'),
                 "created_time": PyQuery(list(PyQuery(review).find('div[class="comment-metadata"] time'))[0]).attr('datetime').split('+')[0].replace('T', ' '),
@@ -153,20 +154,23 @@ class AppsApk:
                         "content_reviews": Dekimashita.vtext(PyQuery(reply).find('div[class="comment-content"]').text())
                     })
 
-            path = f'{create_dir(headers=header, website="appsapk")}/{Dekimashita.vname(header["detail_reviews"]["username_reviews"])}.json'
+            path = f'{create_dir(headers=header, website="appsapk")}/{Dekimashita.vdir(header["detail_reviews"]["username_reviews"])}.json'
 
             header.update({
                 "path_data_raw": 'S3://ai-pipeline-statistics/'+path,
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
-            # if index in [2,5,6,4,9,6,11,12]: response = 404
+            # response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
+
+            response = 200
+            if index in [2,5,6,4,9,6,11,12]: response = 404
             error: int = self.__logs.logsS3(func=self.__logs,
                                header=header,
                                index=index,
                                response=response,
-                               reviews=reviews,
+                               all_reviews=reviews["all_reviews"],
+                               error=reviews["error"],
                                total_err=total_error)
 
 

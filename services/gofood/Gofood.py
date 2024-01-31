@@ -12,6 +12,7 @@ from tqdm import tqdm
 from fake_useragent import FakeUserAgent
 from typing import List
 from ApiRetrys import ApiRetry
+from dekimashita import Dekimashita
 from dotenv import *
 
 from concurrent.futures import ThreadPoolExecutor
@@ -148,7 +149,8 @@ class Gofood:
                                header=raw_json,
                                index=index,
                                response=response,
-                               reviews=reviews,
+                               all_reviews=reviews["all_reviews"],
+                               error=reviews["error"],
                                total_err=total_error)
 
             total_error+=error
@@ -188,7 +190,7 @@ class Gofood:
 
 
                     header_required = {
-                        "id": crc32(Dekimashita.vname(food_review.json()["pageProps"]["outlet"]["core"]["displayName"]).encode('utf-8')),
+                        "id": crc32(Dekimashita.vdir(food_review.json()["pageProps"]["outlet"]["core"]["displayName"]).encode('utf-8')),
                         "link": self.MAIN_URL+food_review.json()["pageProps"].get("outletUrl"),
                         "domain": self.DOMAIN,
                         "tags": [tag["displayName"] for tag in food_review.json()["pageProps"]["outlet"]["core"]["tags"]],

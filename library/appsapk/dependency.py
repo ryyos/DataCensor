@@ -3,6 +3,7 @@ from component import codes
 from typing import List
 from pyquery import PyQuery
 from ApiRetrys import ApiRetry
+from dekimashita import Dekimashita
 from utils import *
 
 class AppsApkLibs:
@@ -20,7 +21,7 @@ class AppsApkLibs:
         ...
             
     def write_detail(self, headers: dict):
-        path_detail = f'{create_dir(headers=headers, website="appsapk")}/detail/{Dekimashita.vname(headers["reviews_name"])}.json'
+        path_detail = f'{create_dir(headers=headers, website="appsapk")}/detail/{Dekimashita.vtext(headers["reviews_name"]).replace(" ", "_")}.json'
 
         headers.update({
             "path_data_raw": path_detail,
