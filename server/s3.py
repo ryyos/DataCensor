@@ -17,12 +17,15 @@ class ConnectionS3:
                                  aws_access_key_id= access_key_id, 
                                  aws_secret_access_key=secret_access_key, 
                                  endpoint_url=endpoint_url,
-                                 config=self.config)
+                                #  config=self.config
+                                 )
 
     def upload(self, key: str, body: dict, bucket: str) -> int:
         response: dict = self.__s3.put_object(Bucket=bucket, Key=key, Body=dumps(body, indent=2, ensure_ascii=False))
         
+        if response['ResponseMetadata']['HTTPStatusCode'] != 200: ic(response)
         return response['ResponseMetadata']['HTTPStatusCode']
+        # return 400
 
 
 if(__name__ == '__main__'):

@@ -5,6 +5,7 @@ from typing import List
 from time import strftime
 from icecream import ic
 from component import codes
+from time import time
 
 from utils import *
 class Logs:
@@ -79,19 +80,14 @@ class Logs:
         if not uid_found:
             self.__monitorings.append(monitoring)
 
-        if not total:
-            self.__monitorings.append(monitoring)
-            File.write_json(self.PATH_MONITORING, self.__monitorings)
-
+        File.write_json(self.PATH_MONITORING, self.__monitorings)
+        
+        if not id_review and status_conditions == 'done':
+            ...
         else:
-            File.write_json(self.PATH_MONITORING, self.__monitorings)
+            self.__logs.append(log)
+            File.write_json(self.PATH_LOG, self.__logs)
             
-            if not id_review and status_conditions == 'done':
-                ...
-            else:
-                self.__logs.append(log)
-                File.write_json(self.PATH_LOG, self.__logs)
-                
         ...
 
     def logsS3(self, func: any, index: int, response: Response, header: dict, total_err: int, error: List, all_reviews: List):
@@ -151,23 +147,16 @@ class Logs:
         # File.write_json(path, header)
 
     def zero(self, func: any, header: dict):
-            datas = File.read_json(func.PATH_MONITORING)
+        ic('panggil int')
+        func.logging(id_product=header["id"],
+                        id_review=None,
+                        status_conditions='done',
+                        status_runtime='success',
+                        total=0,
+                        success=0,
+                        failed=0,
+                        sub_source=header["reviews_name"],
+                        message=None,
+                        type_error=None)
 
-            write = False
-            for data in datas:
-                if data["id_sub_source"] == header["id"]:
-                    write = True
-
-            if not write:
-                func.logging(id_product=header["id"],
-                                id_review=None,
-                                status_conditions='done',
-                                status_runtime='success',
-                                total=0,
-                                success=0,
-                                failed=0,
-                                sub_source=header["reviews_name"],
-                                message=None,
-                                type_error=None)
-
-            
+    

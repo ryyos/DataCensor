@@ -1,0 +1,3 @@
+class IndeedLibs:
+    def __init__(self) -> None:
+        ...

@@ -21,11 +21,13 @@ class MisterAladin:
         self.DOMAIN = 'www.misteraladin.com'
 
         self.__aladin = MisterAladinLibs()
-        self.__executor = ThreadPoolExecutor()
+        self.__executor = ThreadPoolExecutor(max_workers=5)
         ...
 
     def get_reviews(self, headers: dict) -> None:
         response: Response = self.__aladin.api.get(url=self.API_REVIEW+str(headers["id"]), params=self.__aladin.build_param_review(1))
+
+        ic(response.url)        
 
         all_reviews: List[dict] = []
         error: List[dict] = []
@@ -86,20 +88,22 @@ class MisterAladin:
                     "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
                 })
 
-                # response: int = self.__aladin.__s3.upload(path, headers, self.__aladin.bucket)
+                response: int = self.__aladin.s3.upload(path, Dekimashita.vdict(headers, ['\n', '\r']), self.__aladin.bucket)
+                # response = 200
 
-                # self.__aladin.__logs.logsS3(func=self.__aladin.__logs,
-                #                             all_reviews=all_reviews,
-                #                             error=error,
-                #                             header=headers,
-                #                             index=index,
-                #                             response=response,
-                #                             total_err=total_error)
+                self.__aladin.logs.logsS3(func=self.__aladin.logs,
+                                            all_reviews=all_reviews,
+                                            error=error,
+                                            header=headers,
+                                            index=index,
+                                            response=response,
+                                            total_err=total_error)
 
-                File.write_json(path, Dekimashita.vdict(headers, ['\n', '\u002F', '\\', 'u002F']))
+                # File.write_json(path, Dekimashita.vdict(headers, ['\n']))
 
-            # self.__aladin.__logs.zero(func=self.__aladin.__logs,
-            #                           header=headers)
+        ic('panggil out')
+        self.__aladin.logs.zero(func=self.__aladin.logs,
+                                  header=headers)
         
         ...
 
@@ -109,7 +113,7 @@ class MisterAladin:
 
         headers = {
             "id": hotel["id"],
-            "emain": hotel["email"],
+            "email": hotel["email"],
             "link": url,
             "domain": self.DOMAIN,
             "tag": ['www.misteraladin.com'],
@@ -142,7 +146,9 @@ class MisterAladin:
             "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path_detail)
         })
 
-        File.write_json(path_detail, Dekimashita.vdict(headers, ['\n', '\u002F', '\\', 'u002F']))
+        # File.write_json(path_detail, Dekimashita.vdict(headers, ['\n']))
+        response = self.__aladin.s3.upload(key=path_detail, body=Dekimashita.vdict(headers, ['\n', '\r']), bucket=self.__aladin.bucket)
+        ic(response)
         self.get_reviews(headers)
         ...
 
@@ -168,10 +174,13 @@ class MisterAladin:
                 task_executor = []
                 for hotel in tqdm(hotels, ascii=True, smoothing=0.1, total=len(hotels)):
 
-                    # task_executor.append(self.__executor.submit(self.extract_hotel, hotel))
-                    self.extract_hotel(hotel)
+                    task_executor.append(self.__executor.submit(self.extract_hotel, hotel))
+                    # self.extract_hotel(hotel)
                 
-                # wait(task_executor)
+                wait(task_executor)
+                    
+        
+        self.__executor.shutdown(wait=True)
 
 
 

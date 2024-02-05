@@ -13,7 +13,7 @@ from utils import *
 
 class MisterAladinLibs:
     def __init__(self) -> None:
-
+        load_dotenv()
         self.API_HOTELS = 'https://www.misteraladin.com/api/hotels/searches'
         self.API_TOURIST = 'https://www.misteraladin.com/api/generals/poi/nearby'
         self.API_DETAIL = 'https://www.misteraladin.com/api/hotel-review/review/hotel/328473?sort=newest&page=1&perpage=10'
@@ -22,12 +22,12 @@ class MisterAladinLibs:
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True, redirect_url=self.MAIN_URL, handle_forbidden=True)
 
-        self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
+        self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
                                  secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
                                  endpoint_url=os.getenv('ENDPOINT'),
                                  )
 
-        self.__logs = Logs(path_monitoring='logs/misteraladin/monitoring_data.json',
+        self.logs = Logs(path_monitoring='logs/misteraladin/monitoring_data.json',
                             path_log='logs/misteraladin/monitoring_logs.json',
                             domain='www.misteraladin.com')
         
@@ -120,7 +120,7 @@ class MisterAladinLibs:
         ...
 
     def create_dir(self, headers: dict) -> str:
-        try: os.makedirs(f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vtext(headers["reviews_name"].lower().replace(" ", "_"))}/json/detail')
+        try: os.makedirs(f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vdir(headers["reviews_name"])}/json/detail')
         except Exception: ...
-        finally: return f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vtext(headers["reviews_name"].lower().replace(" ", "_"))}/json'
+        finally: return f'data/data_raw/data_review/mister_aladin/{headers["country"]}/{headers["city"]}/{headers["subdistrict"]}/{Dekimashita.vdir(headers["reviews_name"])}/json'
         ...

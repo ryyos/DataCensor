@@ -24,7 +24,7 @@ class Uptodown:
 
         self.parser = Parser()
         self.__uptodown = UptodownLibs()
-        self.__executor = ThreadPoolExecutor()
+        self.__executor = ThreadPoolExecutor(max_workers=5)
 
         self.__logs = Logs(path_monitoring='logs/uptodown/monitoring_data.json',
                             path_log='logs/uptodown/monitoring_logs.json',
@@ -119,14 +119,14 @@ class Uptodown:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            # response = self.__s3.upload(key=path,
-            #                             body=header,
-            #                             bucket=self.__bucket)
+            response = self.__s3.upload(key=path,
+                                        body=header,
+                                        bucket=self.__bucket)
 
-            response = 200
-            if index in [2,5,6,4,9,6,11,12]: response = 404
+            # response = 200
+            # if index in [2,5,6,4,9,6,11,12]: response = 404
 
-            File.write_json(path, header)
+            # File.write_json(path, header)
             
             error: int = self.__logs.logsS3(func=self.__logs,
                                header=header,
@@ -201,11 +201,11 @@ class Uptodown:
             "path_data_clean": 'S3://ai-pipeline-statistics/+'+convert_path(path_detail)
         })
 
-        # self.__s3.upload(key=path_detail,
-        #                  body=header,
-        #                  bucket=self.__bucket)
+        self.__s3.upload(key=path_detail,
+                         body=header,
+                         bucket=self.__bucket)
 
-        File.write_json(path=path_detail, content=header)
+        # File.write_json(path=path_detail, content=header)
 
         self.extract_review(header)
         ...
@@ -227,8 +227,8 @@ class Uptodown:
                         "app": app
                     }
 
-                    self.extract_detail(component)
-                    # task_executor.append(self.__executor.submit(self.extract_detail, component))
+                    # self.extract_detail(component)
+                    task_executor.append(self.__executor.submit(self.extract_detail, component))
                 wait(task_executor)
         
         self.__executor.shutdown(wait=True)

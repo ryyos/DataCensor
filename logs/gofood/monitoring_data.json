@@ -1,6 +1,6 @@
 [
   {
-    "Crawlling_time": "2024-01-31 12:30:09",
+    "Crawlling_time": "2024-02-05 11:07:58",
     "id_project": null,
     "project": "Data Intelligence",
     "sub_project": "data review",
@@ -14,7 +14,7 @@
     "assign": "Rio"
   },
   {
-    "Crawlling_time": "2024-01-31 12:30:13",
+    "Crawlling_time": "2024-02-05 11:08:04",
     "id_project": null,
     "project": "Data Intelligence",
     "sub_project": "data review",
@@ -28,7 +28,7 @@
     "assign": "Rio"
   },
   {
-    "Crawlling_time": "2024-01-31 12:30:26",
+    "Crawlling_time": "2024-02-05 11:08:09",
     "id_project": null,
     "project": "Data Intelligence",
     "sub_project": "data review",
@@ -39,6 +39,34 @@
     "total_success": 34,
     "total_failed": 0,
     "status": "done",
+    "assign": "Rio"
+  },
+  {
+    "Crawlling_time": "2024-02-05 11:08:13",
+    "id_project": null,
+    "project": "Data Intelligence",
+    "sub_project": "data review",
+    "source_name": "gofood.co.id",
+    "sub_source_name": "Asinan Betawi Umar Bakrie, Bekasi Selatan",
+    "id_sub_source": 2427904537,
+    "total_data": 96,
+    "total_success": 96,
+    "total_failed": 0,
+    "status": "done",
+    "assign": "Rio"
+  },
+  {
+    "Crawlling_time": "2024-02-05 11:08:23",
+    "id_project": null,
+    "project": "Data Intelligence",
+    "sub_project": "data review",
+    "source_name": "gofood.co.id",
+    "sub_source_name": "Kantin Aulia 1, Bekasi Selatan",
+    "id_sub_source": 2881660796,
+    "total_data": 38,
+    "total_success": 23,
+    "total_failed": 0,
+    "status": "on progess",
     "assign": "Rio"
   }
 ]

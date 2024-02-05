@@ -114,9 +114,9 @@ class Softonic:
 
         ... # menulis detail
         details: dict = self.__softonic.write_detail(headers=raw_game, detail_game=detail_game)
-        # self.__s3.upload(key=details["path_detail"], 
-        #                  body=details["data_detail"], 
-        #                  bucket=self._bucket)
+        self.__s3.upload(key=details["path_detail"], 
+                         body=details["data_detail"], 
+                         bucket=self._bucket)
 
         ...
 
@@ -171,10 +171,10 @@ class Softonic:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path),
             })
 
-            # response = self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
-            File.write_json(path=path, content=raw_game)
-            response = 200
-            if index in [2,5,6,4,9,6,11,12]: response = 404
+            response = self.__s3.upload(key=path, body=raw_game, bucket=self._bucket)
+            # File.write_json(path=path, content=raw_game)
+            # response = 200
+            # if index in [2,5,6,4,9,6,11,12]: response = 404
 
             error: int = self.__logs.logsS3(func=self.__logs,
                                header=raw_game,
@@ -258,4 +258,4 @@ class Softonic:
                 ...
             ...
         ...
-        self.__executor.shutdown(wait=True)
+        # self.__executor.shutdown(wait=True)

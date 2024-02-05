@@ -91,7 +91,7 @@ class Gofood:
         
         details: dict = self.__gofood.write_detail(raw_json)
 
-        self.__s3.upload(key=details["path_detail"], body=details["data_detail"], bucket=self._bucket)
+        # self.__s3.upload(key=details["path_detail"], body=details["data_detail"], bucket=self._bucket)
         # File.write_json(path=details["path_detail"], content=details["data_detail"])
 
         reviews: dict = self.__gofood.collect_reviews(raw_json)
@@ -141,7 +141,8 @@ class Gofood:
                 "path_data_clean": f'S3://ai-pipeline-statistics/{convert_path(path_data)}/{detail_reviews["id_review"]}.json'
             })
 
-            response = self.__s3.upload(key=f'{path_data}/{detail_reviews["id_review"]}.json', body=raw_json, bucket=self._bucket)
+            # response = self.__s3.upload(key=f'{path_data}/{detail_reviews["id_review"]}.json', body=raw_json, bucket=self._bucket)
+            response = 200
 
             # File.write_json(path=f'{path_data}/{detail_reviews["id_review"]}.json', content=raw_json)
 
@@ -184,8 +185,6 @@ class Gofood:
 
                     # Jika di redirect maka ambil destination dan request ke path yang di berikan
                     if food_review.json()["pageProps"].get("__N_REDIRECT", None):
-                        ic('masuk redirect')
-                        ic(food_review.json()["pageProps"]["__N_REDIRECT"])
                         food_review = self.__api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{food_review.json()["pageProps"]["__N_REDIRECT"]}/reviews.json?id={card.split("/")[-1]}', max_retries=30)
 
 

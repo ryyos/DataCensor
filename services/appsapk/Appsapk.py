@@ -25,7 +25,7 @@ class AppsApk:
     def __init__(self) -> None:
         load_dotenv()
 
-        self.__executor = ThreadPoolExecutor(max_workers=3)
+        self.__executor = ThreadPoolExecutor(max_workers=5)
         self.__appsapk = AppsApkLibs()
         self.__api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://www.appsapk.com')
 
@@ -161,10 +161,11 @@ class AppsApk:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            # response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
+            response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
 
-            response = 200
-            if index in [2,5,6,4,9,6,11,12]: response = 404
+            # response = 200
+            # if index in [2,5,6,4,9,6,11,12]: response = 404
+
             error: int = self.__logs.logsS3(func=self.__logs,
                                header=header,
                                index=index,
@@ -192,10 +193,10 @@ class AppsApk:
 
             task_executor = []
             for app in apps:
-                task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
+                # task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
 
-                # self.__extract_reviews(PyQuery(app).attr('href'))
-            wait(task_executor)
+                self.__extract_reviews(PyQuery(app).attr('href'))
+            # wait(task_executor)
             if not apps: break
-        self.__executor.shutdown(wait=True)
+        # self.__executor.shutdown(wait=True)
         ...

@@ -6,6 +6,7 @@ from services import AppsApk
 from services import Gofood
 from services import Uptodown
 from services import MisterAladin
+from services import Indeed
 
 class Main:
     
@@ -42,6 +43,12 @@ class Main:
     def mister_aladin():
         sof = MisterAladin()
         sof.main()
+
+
+    @task.command('mister_aladin')
+    def mister_aladin():
+        ind = Indeed()
+        ind.main()
 
 if __name__=='__main__':
     main = Main()
