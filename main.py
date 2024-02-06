@@ -48,6 +48,7 @@ class Main:
     @task.command('indeed')
     def indeed():
         ind = Indeed()
+        ind.main()
 
 if __name__=='__main__':
     main = Main()

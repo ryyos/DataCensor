@@ -1,17 +1,14 @@
-import asyncio
 
-from time import time
+from time import time, sleep
 from library import IndeedLibs
 from pyquery import PyQuery
 from icecream import ic
 from playwright.async_api import Page
-from browser import Playwright
 from utils import *
 
 class Indeed(IndeedLibs):
     def __init__(self) -> None:
         super().__init__(self)
-        asyncio.get_event_loop().run_until_complete(self.main())
 
     async def extract_company(self, url: str, page: Page) -> None:
         await page.goto(url)
@@ -50,15 +47,11 @@ class Indeed(IndeedLibs):
         ic(headers)
         ...
 
-    async def main(self) -> None:
-        browser = await Playwright.browser()
-        page = await browser.new_page()
+    def main(self) -> None:
+        companies = self.get_companies('A')
 
-        companies = await self.get_companies(page)
-        for company in companies:
-            await self.extract_company(company, page)
-            break
+        sleep(10)
 
-        await page.close()
-        await browser.close()
+        self.page.close()
+        self.browser.close()
         ...
