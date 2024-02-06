@@ -45,10 +45,9 @@ class Main:
         sof.main()
 
 
-    @task.command('mister_aladin')
-    def mister_aladin():
+    @task.command('indeed')
+    def indeed():
         ind = Indeed()
-        ind.main()
 
 if __name__=='__main__':
     main = Main()
