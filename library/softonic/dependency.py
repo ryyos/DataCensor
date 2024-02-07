@@ -8,10 +8,13 @@ from pyquery import PyQuery
 from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
 from server.s3 import ConnectionS3
+from dotenv import load_dotenv
+
 from utils import *
 
 class SoftonicLibs:
-    def __init__(self) -> None:
+    def __init__(self, save: bool) -> None:
+        load_dotenv()
 
         self.api = ApiRetry(show_logs=False, 
                               handle_forbidden=True, 
@@ -28,6 +31,8 @@ class SoftonicLibs:
                                  )
         
         self._bucket = os.getenv('BUCKET')
+
+        self.SAVE_TO_LOKAL = save
 
         self.API_REVIEW = 'https://disqus.com/api/3.0/threads/listPostsThreaded'
         self.API_KEY = 'E8Uh5l5fHZ6gD8U3KycjAIAk46f68Zw7C6eW8WSjZvCLXebZ7p0r1yrYDrLilk2F'
@@ -78,7 +83,8 @@ class SoftonicLibs:
         return f'{self.DISQUS_API_COMMENT}/?base=default&f=en-softonic-com&t_u={url_apk}/comments&t_d={name_apk}&s_o=default#version=cb3f36bfade5c758ef967a494d077f95'
         ...
     def create_dir(self, raw_data: dict, main_path: str) -> str:
-        try: os.makedirs(f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{Dekimashita.vdir(raw_data["reviews_name"].lower())}/json/detail')
+        try: 
+            if self.SAVE_TO_LOKAL: os.makedirs(f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{Dekimashita.vdir(raw_data["reviews_name"].lower())}/json/detail')
         except Exception: ...
         finally: return f'{main_path}/data_raw/data_review/softonic/{raw_data["platform"]}/{raw_data["type"]}/{raw_data["categories"]}/{Dekimashita.vdir(raw_data["reviews_name"].lower())}/json'
         ...
@@ -170,6 +176,5 @@ class SoftonicLibs:
             "path_data_clean": convert_path(path_detail)
         })
 
-        File.write_json(path_detail, headers)
         return (path_detail, headers)
         

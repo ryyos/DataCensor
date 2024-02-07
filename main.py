@@ -19,14 +19,17 @@ class Main:
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
-    def gofood(s3, thread, save):
+    def gofood(s3, save, thread):
         sof = Gofood(s3, save, thread)
         sof.main()
 
 
     @task.command('softonic')
-    def softonic():
-        sof = Softonic()
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    def softonic(s3, save, thread):
+        sof = Softonic(s3, save, thread)
         sof.main()
 
 

@@ -228,6 +228,7 @@ class Gofood(GofoodLibs):
         for city in cities: # Mengambil Kota
             self.__extract_city(city)
 
-
+        
+        self.__executor.shutdown(wait=True)
 
         ...

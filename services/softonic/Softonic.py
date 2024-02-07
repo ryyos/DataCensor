@@ -5,7 +5,6 @@ from time import time, strftime, sleep
 from pyquery import PyQuery
 from concurrent.futures import ThreadPoolExecutor, wait
 from zlib import crc32
-from dotenv import *
 from library import SoftonicLibs
 from dekimashita import Dekimashita
 
@@ -13,12 +12,15 @@ from utils import *
 
 
 class Softonic(SoftonicLibs):
-    def __init__(self) -> None:
-        super().__init__()
-        load_dotenv()
+    def __init__(self, s3: bool, save: bool, thread: bool) -> None:
+        super().__init__(save)
         
-        self.SAVE_TO_S3 = False
         self.__executor = ThreadPoolExecutor()
+
+        self.SAVE_TO_S3 = s3
+        self.SAVE_TO_LOKAL = save
+        self.USING_THREADS = thread
+
 
         self.TYPES = [
             "new-apps",
@@ -34,8 +36,6 @@ class Softonic(SoftonicLibs):
             "mac",
             "iphone"
         ]
-
-        self.RESPONSE_CODE = [200, 400, 404, 500]
         ...
 
     def __extract_review(self, raw_game: str) -> None: # halaman game
@@ -82,6 +82,9 @@ class Softonic(SoftonicLibs):
 
         ... # menulis detail
         (path_detail, data_detail) = self.write_detail(headers=raw_game, detail_game=detail_game)
+
+        if self.SAVE_TO_LOKAL:
+            File.write_json(path_detail, data_detail)
 
         if self.SAVE_TO_S3: 
             self.s3.upload(key=path_detail, 
@@ -139,11 +142,13 @@ class Softonic(SoftonicLibs):
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path),
             })
 
-            if self.SAVE_TO_S3: response = self.s3.upload(key=path, body=raw_game, bucket=self._bucket)
-            else: response = 200
+            if self.SAVE_TO_S3: 
+                response = self.s3.upload(key=path, body=raw_game, bucket=self._bucket)
+            else: 
+                response = 200
             
-            File.write_json(path=path, content=raw_game)
-            # if index in [2,5,6,4,9,6,11,12]: response = 404
+            if self.SAVE_TO_LOKAL:
+                File.write_json(path=path, content=raw_game)
 
             error: int = self.logs.logsS3(func=self.logs,
                                header=raw_game,
@@ -203,12 +208,15 @@ class Softonic(SoftonicLibs):
                             "url": game
                         }
                         
-                        # self.__extract_game(igredation)
-                        task_executor.append(self.__executor.submit(self.__extract_game, igredation))
+                        if self.USING_THREADS: 
+                            task_executor.append(self.__executor.submit(self.__extract_game, igredation))
+                        else: 
+                            self.__extract_game(igredation)
+
                         ...
                     wait(task_executor)
                     ...
                 ...
             ...
         ...
-        # self.__executor.shutdown(wait=True)
+        self.__executor.shutdown(wait=True)
