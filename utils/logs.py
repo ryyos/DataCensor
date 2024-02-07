@@ -4,7 +4,7 @@ from requests import Response
 from typing import List
 from time import strftime
 from icecream import ic
-from component import codes
+from components import codes
 from time import time
 
 from utils import *

@@ -5,7 +5,7 @@ from icecream import ic
 from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
 from server.s3 import ConnectionS3
-from component import codes
+from components import codes
 from dotenv import load_dotenv
 from utils import *
 

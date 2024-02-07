@@ -7,6 +7,7 @@ from services import Gofood
 from services import Uptodown
 from services import MisterAladin
 from services import Indeed
+from services import FourShared
 
 class Main:
     
@@ -55,6 +56,12 @@ class Main:
     def indeed():
         ind = Indeed()
         ind.main()
+
+
+    @task.command('4shared')
+    def appsapk():
+        sof = FourShared()
+        sof.main()
 
 if __name__=='__main__':
     main = Main()

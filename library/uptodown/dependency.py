@@ -8,7 +8,7 @@ from pyquery import PyQuery
 from fake_useragent import FakeUserAgent
 from icecream import ic
 from typing import List
-from component import codes
+from components import codes
 from utils import *
 
 class UptodownLibs:

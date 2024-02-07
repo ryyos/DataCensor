@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from typing import List
 from time import time
 from icecream import ic
-from component import codes
+from components import codes
 from tqdm import tqdm
 from utils import *
 

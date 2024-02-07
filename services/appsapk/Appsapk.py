@@ -13,7 +13,7 @@ from requests import Session, Response
 from fake_useragent import FakeUserAgent
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import List
-from component import codes
+from components import codes
 
 from library import AppsApkLibs
 from ApiRetrys import ApiRetry

@@ -1,6 +1,6 @@
 import os
 
-from component import codes
+from components import codes
 from typing import List
 from pyquery import PyQuery
 from ApiRetrys import ApiRetry
