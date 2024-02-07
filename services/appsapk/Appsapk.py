@@ -14,31 +14,20 @@ from fake_useragent import FakeUserAgent
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import List
 from component import codes
-from server.s3 import ConnectionS3
+
 from library import AppsApkLibs
 from ApiRetrys import ApiRetry
 
 from utils import *
 from dotenv import *
 
-class AppsApk:
+class AppsApk(AppsApkLibs):
     def __init__(self) -> None:
-        load_dotenv()
+        super().__init__()
 
         self.__executor = ThreadPoolExecutor(max_workers=5)
         self.__appsapk = AppsApkLibs()
-        self.__api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://www.appsapk.com')
 
-        self.__logs = Logs(path_monitoring='logs/appsapk/monitoring_data.json',
-                            path_log='logs/appsapk/monitoring_logs.json',
-                            domain='www.appsapk.com')
-        
-        self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
-                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
-                                 endpoint_url=os.getenv('ENDPOINT'),
-                                 )
-
-        self._bucket = os.getenv('BUCKET')
         self.MAIN_DOMAIN = 'www.appsapk.com'
         self.MAIN_URL = 'https://www.appsapk.com'
         self.MAIN_PATH = 'data'
@@ -46,7 +35,7 @@ class AppsApk:
         ...
 
     def __extract_app(self, url_app: PyQuery) -> dict:
-        response = self.__api.get(url=url_app)
+        response = self.api.get(url=url_app)
         app = PyQuery(response.text)
 
         try: int(total_review = app.find('h3[class="comment-title main-box-title"]').text().split(' ')[0])
@@ -97,7 +86,8 @@ class AppsApk:
         })
 
         try:
-            response = self.__s3.upload(key=path_detail, body=results, bucket=self._bucket)
+            response = self.s3.upload(key=path_detail, body=results, bucket=self.bucket)
+            ic(response)
             # self.__appsapk.write_detail(headers=results)
         except Exception as err:
             ic(err)
@@ -161,12 +151,12 @@ class AppsApk:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            response = self.__s3.upload(key=path, body=header, bucket=self._bucket)
+            response = self.s3.upload(key=path, body=header, bucket=self.bucket)
 
             # response = 200
             # if index in [2,5,6,4,9,6,11,12]: response = 404
 
-            error: int = self.__logs.logsS3(func=self.__logs,
+            error: int = self.logs.logsS3(func=self.logs,
                                header=header,
                                index=index,
                                response=response,
@@ -179,7 +169,7 @@ class AppsApk:
             reviews["error"].clear()
 
         if not reviews["all_reviews"]:
-            self.__logs.zero(func=self.__logs,
+            self.logs.zero(func=self.logs,
                              header=header)
         ...
 

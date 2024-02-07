@@ -15,6 +15,15 @@ class Main:
     def task(): ...
 
 
+    @task.command('gofood')
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    def gofood(s3, thread, save):
+        sof = Gofood(s3, save, thread)
+        sof.main()
+
+
     @task.command('softonic')
     def softonic():
         sof = Softonic()
@@ -24,12 +33,6 @@ class Main:
     @task.command('appsapk')
     def appsapk():
         sof = AppsApk()
-        sof.main()
-
-
-    @task.command('gofood')
-    def gofood():
-        sof = Gofood()
         sof.main()
 
 

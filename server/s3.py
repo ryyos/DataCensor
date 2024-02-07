@@ -5,6 +5,7 @@ from botocore.config import Config
 from dotenv import *
 from json import dumps
 from icecream import ic
+from utils import Runtime
 
 class ConnectionS3:
     def __init__(self, access_key_id, secret_access_key, endpoint_url) -> None:
@@ -23,7 +24,7 @@ class ConnectionS3:
     def upload(self, key: str, body: dict, bucket: str) -> int:
         response: dict = self.__s3.put_object(Bucket=bucket, Key=key, Body=dumps(body, indent=2, ensure_ascii=False))
         
-        if response['ResponseMetadata']['HTTPStatusCode'] != 200: ic(response)
+        Runtime.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
         return response['ResponseMetadata']['HTTPStatusCode']
         # return 400
 

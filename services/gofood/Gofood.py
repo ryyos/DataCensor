@@ -4,59 +4,31 @@ import requests
 import json
 
 from zlib import crc32
-from requests import Session
-from time import time, sleep, strftime
-from datetime import datetime, timezone
+from time import time
 from icecream import ic
-from tqdm import tqdm
-from fake_useragent import FakeUserAgent
 from typing import List
-from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
 from dotenv import *
 
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
 
-from server.s3 import ConnectionS3
 from library import GofoodLibs
 from utils import *
 
-class Gofood:
-    def __init__(self) -> None:
-        load_dotenv()
+class Gofood(GofoodLibs):
+    def __init__(self, s3: bool, save: bool, thread: bool) -> None:
+        super().__init__(save)
 
-        self.__api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://gofood.co.id')
+        self.SAVE_TO_S3 = s3
+        self.SAVE_TO_LOKAL = save
+        self.USING_THREADS = thread
 
-        self.__file = File()
-        self.__gofood = GofoodLibs()
-        self.__sessions = Session()
         self.__executor = ThreadPoolExecutor()
         self.__char: str = []
 
-        self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
-                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
-                                 endpoint_url=os.getenv('ENDPOINT'),
-                                 )
-
-
-        self.__logs = Logs(path_monitoring='logs/gofood/monitoring_data.json',
-                            path_log='logs/gofood/monitoring_logs.json',
-                            domain='gofood.co.id')
-        
-
-        self._bucket = os.getenv('BUCKET')
-        self.__datas: List[dict] = []
-        self.__monitorings: List[dict] = []
-
-        self.VERSION = '9.0.1'
-
         self.DOMAIN = 'gofood.co.id'
         self.MAIN_URL = 'https://gofood.co.id'
-        self.MAIN_PATH = 'data'
-        self.LOG_PATH_SUC = 'logs/results.txt'
-        self.LOG_PATH_ERR = 'logs/detail.txt'
-        self.PIC = 'Rio Dwi Saputra'
 
         self.API_CITY = f'https://gofood.co.id/_next/data/{self.VERSION}/id/cities.json' # 89
         self.RESTAURANT = f'https://gofood.co.id/_next/data/{self.VERSION}/id/jakarta/restaurants.json' # 94
@@ -83,24 +55,20 @@ class Gofood:
         }
 
 
-
     def __get_review(self, raw_json: dict):
+        details: dict = self.write_detail(raw_json)
 
-        logger.info('extract review from restaurant')
-        uid = raw_json["restaurant_id"]
-        
-        details: dict = self.__gofood.write_detail(raw_json)
+        if self.SAVE_TO_S3: 
+            self.s3.upload(key=details["path_detail"], body=details["data_detail"], bucket=self.bucket)
 
-        # self.__s3.upload(key=details["path_detail"], body=details["data_detail"], bucket=self._bucket)
-        # File.write_json(path=details["path_detail"], content=details["data_detail"])
+        if self.SAVE_TO_LOKAL:
+            File.write_json(path=details["path_detail"], content=details["data_detail"])
 
-        reviews: dict = self.__gofood.collect_reviews(raw_json)
+        reviews: dict = self.collect_reviews(raw_json)
         raw_json["total_reviews"] = len(reviews["all_reviews"])
-
-        ic(len(reviews["all_reviews"]))
         
         total_error = 0
-        for index, comment in tqdm(enumerate(reviews["all_reviews"]), ascii=True, smoothing=0.1, total=len(reviews["all_reviews"])):
+        for index, comment in enumerate(reviews["all_reviews"]):
             detail_reviews = {
                 "id_review": comment["id"],
                 "username_reviews": comment["author"]["fullName"],
@@ -131,8 +99,7 @@ class Gofood:
                 "date_of_experience_epoch": convert_time(comment["createdAt"]),
             }
 
-            path_data = self.__gofood.create_dir(raw_data=raw_json)
-
+            path_data = self.create_dir(raw_data=raw_json, create=self.SAVE_TO_LOKAL)
             detail_reviews["tags_review"].append(self.DOMAIN)
 
             raw_json.update({
@@ -141,12 +108,15 @@ class Gofood:
                 "path_data_clean": f'S3://ai-pipeline-statistics/{convert_path(path_data)}/{detail_reviews["id_review"]}.json'
             })
 
-            # response = self.__s3.upload(key=f'{path_data}/{detail_reviews["id_review"]}.json', body=raw_json, bucket=self._bucket)
-            response = 200
+            if self.SAVE_TO_S3: 
+                response = self.s3.upload(key=f'{path_data}/{detail_reviews["id_review"]}.json', body=raw_json, bucket=self.bucket)
+            else: 
+                response = 200
 
-            # File.write_json(path=f'{path_data}/{detail_reviews["id_review"]}.json', content=raw_json)
+            if self.SAVE_TO_LOKAL: 
+                File.write_json(path=f'{path_data}/{detail_reviews["id_review"]}.json', content=raw_json)
 
-            error: int = self.__logs.logsS3(func=self.__logs,
+            error: int = self.logs.logsS3(func=self.logs,
                                header=raw_json,
                                index=index,
                                response=response,
@@ -158,17 +128,14 @@ class Gofood:
             reviews["error"].clear()
 
         if not reviews["all_reviews"]:
-            self.__logs.zero(func=self.__logs,
+            self.logs.zero(func=self.logs,
                              header=raw_json)
         ...
 
     def __extract_restaurant(self, ingredient: dict):
-            cards = self.__gofood.collect_card_restaurant(restaurant=ingredient["restaurant"]["path"]) # Mengambil card restaurant dari area
+            cards: List[str] = self.collect_card_restaurant(restaurant=ingredient["restaurant"]["path"]) # Mengambil card restaurant dari area
 
-            ic(len(cards))
-            for index, card in enumerate(cards):
-                ic(card)
-
+            for card in cards:
 
                 """ api_review
 
@@ -180,12 +147,11 @@ class Gofood:
                 
             
                 try:
-                    food_review = self.__api.get(url=api_review, max_retries=30)
-                    logger.info(card)
+                    food_review = self.api.get(url=api_review, max_retries=30)
 
                     # Jika di redirect maka ambil destination dan request ke path yang di berikan
                     if food_review.json()["pageProps"].get("__N_REDIRECT", None):
-                        food_review = self.__api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{food_review.json()["pageProps"]["__N_REDIRECT"]}/reviews.json?id={card.split("/")[-1]}', max_retries=30)
+                        food_review = self.api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{food_review.json()["pageProps"]["__N_REDIRECT"]}/reviews.json?id={card.split("/")[-1]}', max_retries=30)
 
 
                     header_required = {
@@ -193,7 +159,7 @@ class Gofood:
                         "link": self.MAIN_URL+food_review.json()["pageProps"].get("outletUrl"),
                         "domain": self.DOMAIN,
                         "tags": [tag["displayName"] for tag in food_review.json()["pageProps"]["outlet"]["core"]["tags"]],
-                        "crawling_time": strftime('%Y-%m-%d %H:%M:%S'),
+                        "crawling_time": now(),
                         "crawling_time_epoch": int(time()),
                         "path_data_raw": "",
                         "path_data_clean": "",
@@ -227,16 +193,6 @@ class Gofood:
                     }
 
 
-                    logger.info(f'city: {ingredient["city"]["name"].lower()}')
-                    logger.info(f'restaurant: {ingredient["restaurant"]["path"].split("/")[-1]}')
-                    logger.info(f'link: {header_required["link"]}')
-                    logger.info(f'api review: {api_review}')
-                    logger.info(f'restaurant name: {header_required["reviews_name"]}')
-                    logger.info(f'card : {index}')
-                    logger.info(f'total cards : {len(cards)}')
-                    print()
-
-
                     header_required["tags"].append(self.DOMAIN)
                     self.__get_review(raw_json=header_required)
 
@@ -250,33 +206,28 @@ class Gofood:
                     self.__char.append(api_review)
 
     def __extract_city(self, city: str) -> None:
-        response = self.__api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{city["path"]}.json', max_retries=10)
+        response = self.api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{city["path"]}.json', max_retries=10)
 
         task_executor = []
-        for index, restaurant in enumerate(response.json()["pageProps"]["contents"][0]["data"]): # Mengambil restaurant dari kota
+        for restaurant in response.json()["pageProps"]["contents"][0]["data"]: # Mengambil restaurant dari kota
 
-            ic(index)
             ingredient = {
                 "restaurant": restaurant,
                 "city": city
             }
 
-            self.__extract_restaurant(ingredient)
-            # task_executor.append(self.__executor.submit(self.__extract_restaurant, ingredient))
+            if self.USING_THREADS: task_executor.append(self.__executor.submit(self.__extract_restaurant, ingredient))
+            else: self.__extract_restaurant(ingredient)
 
         wait(task_executor)
 
 
     def main(self) -> None:
 
-        cities = self.__gofood.collect_cities(self.API_CITY)
-        # task_city_executor = []
+        cities = self.collect_cities(self.API_CITY)
         for city in cities: # Mengambil Kota
             self.__extract_city(city)
 
-            # task_city_executor.append(self.__city_executor.submit(self.__extract_city, city))
-
-        # wait(task_city_executor)
 
 
         ...

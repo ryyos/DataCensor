@@ -1,18 +1,33 @@
+import os
 
 from component import codes
 from typing import List
 from pyquery import PyQuery
 from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
+from server.s3 import ConnectionS3
+from dotenv import load_dotenv
 from utils import *
 
 class AppsApkLibs:
     def __init__(self) -> None:
-        self.__api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://www.appsapk.com')
+        load_dotenv()
+        self.api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://www.appsapk.com')
+        self.logs = Logs(path_monitoring='logs/appsapk/monitoring_data.json',
+                            path_log='logs/appsapk/monitoring_logs.json',
+                            domain='www.appsapk.com')
+        
+        self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
+                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
+                                 endpoint_url=os.getenv('ENDPOINT'),
+                                 )
+        
+        self.bucket = os.getenv('BUCKET')
+
         ...
 
     def collect_apps(self, url_page: str) -> List[str]:
-        response = self.__api.get(url=url_page)
+        response = self.api.get(url=url_page)
         html = PyQuery(response.text)
 
         apps = html.find('article.vce-post.post.type-post.status-publish.format-standard.has-post-thumbnail.hentry h2 a')
@@ -41,7 +56,7 @@ class AppsApkLibs:
 
             url_review = f'{url_app}comment-page-{comment_page}/#comments'
 
-            response = self.__api.get(url=url_review)
+            response = self.api.get(url=url_review)
             app = PyQuery(response.text)
 
             if response.status_code != 200:

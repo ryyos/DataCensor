@@ -2,30 +2,42 @@ import json
 import os
 
 from zlib import crc32
-from typing import List
-from icecream import ic
+from typing import Tuple, List
 from requests import Response
 from pyquery import PyQuery
 from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
+from server.s3 import ConnectionS3
 from utils import *
 
 class SoftonicLibs:
     def __init__(self) -> None:
 
-        self.__api = ApiRetry(show_logs=True, 
+        self.api = ApiRetry(show_logs=False, 
                               handle_forbidden=True, 
                               redirect_url='https://en.softonic.com/', 
                               defaulth_headers=True)
-
+        
+        self.logs = Logs(path_monitoring='logs/softonic/monitoring_data.json',
+                            path_log='logs/softonic/monitoring_logs.json',
+                            domain='en.softonic.com')
+        
+        self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
+                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
+                                 endpoint_url=os.getenv('ENDPOINT'),
+                                 )
+        
+        self._bucket = os.getenv('BUCKET')
 
         self.API_REVIEW = 'https://disqus.com/api/3.0/threads/listPostsThreaded'
         self.API_KEY = 'E8Uh5l5fHZ6gD8U3KycjAIAk46f68Zw7C6eW8WSjZvCLXebZ7p0r1yrYDrLilk2F'
         self.DISQUS_API_COMMENT = 'https://disqus.com/embed/comments'
+        self.MAIN_DOMAIN = 'en.softonic.com'
+        self.MAIN_URL = 'https://en.softonic.com/'
         ...
         
     def collect_categories(self, url: str) -> List[str]:
-        response: Response = self.__api.get(url=url)
+        response: Response = self.api.get(url=url)
         html = PyQuery(response.text)
 
         categories_urls = [PyQuery(categories).attr('href') for categories in html.find('#sidenav-menu a[class="menu-categories__link"]')]
@@ -34,7 +46,7 @@ class SoftonicLibs:
         ...
 
     def collect_games(self, url: str):
-        response = self.__api.get(url=url)
+        response = self.api.get(url=url)
         
         games = []
         page = 1
@@ -43,13 +55,9 @@ class SoftonicLibs:
 
             for game in html.find('a[data-meta="app"]'): games.append(PyQuery(game).attr('href'))
 
-            response: Response = self.__api.get(url=f'{url}/{page}')
+            response: Response = self.api.get(url=f'{url}/{page}')
 
             if page > 1 and response.history: break
-
-            logger.info(f'page: {page}')
-            logger.info(f'total application: {len(games)}')
-            print()
 
             page+=1
 
@@ -77,17 +85,15 @@ class SoftonicLibs:
 
     def get_reviews(self, url_game: str):
 
-        response = self.__api.get(url=f'{url_game}/comments')
+        response = self.api.get(url=f'{url_game}/comments')
         html = PyQuery(response.text)
 
         game_title = html.find('head > title:first-child')
-        ic(self.build_param_disqus(name_apk=game_title, url_apk=url_game))
-        ic(game_title)
         ...
 
         ... # extract disqus review
 
-        response = self.__api.get(url=self.build_param_disqus(name_apk=game_title, url_apk=url_game))
+        response = self.api.get(url=self.build_param_disqus(name_apk=game_title, url_apk=url_game))
 
         disqus_page = PyQuery(response.text)
         reviews_temp = json.loads(disqus_page.find('#disqus-threadData').text())
@@ -95,11 +101,7 @@ class SoftonicLibs:
         all_reviews: List[dict] = []
         error: List[dict] = []
 
-        ic(len(reviews_temp["response"]["posts"]))
-
         for review in reviews_temp["response"]["posts"]:
-
-            ic(review["parent"])
             if review["parent"]:
                 for parent in all_reviews:
                     if parent["id"] == review["parent"]:
@@ -118,7 +120,7 @@ class SoftonicLibs:
 
             while True:
 
-                reviews = self.__api.get(url=self.param_second_cursor(thread=thread,cursor=cursor)).json()
+                reviews = self.api.get(url=self.param_second_cursor(thread=thread,cursor=cursor)).json()
 
                 if not reviews["cursor"]["hasNext"]: break
                 
@@ -135,7 +137,6 @@ class SoftonicLibs:
 
 
                 for review in reviews["response"]:
-                    ic(review["parent"])
                     if review["parent"]:
                         for parent in all_reviews:
                             if parent["id"] == review["parent"]:
@@ -157,9 +158,8 @@ class SoftonicLibs:
             "error": error
         }
 
-    def write_detail(self, headers: dict, detail_game: dict):
+    def write_detail(self, headers: dict, detail_game: dict) -> Tuple[str]:
         headers["reviews_name"] = detail_game["title"]
-        ic(headers["reviews_name"])
 
         path_detail = f'{self.create_dir(raw_data=headers, main_path="data")}/detail/{Dekimashita.vdir(detail_game["title"])}.json'
 
@@ -171,7 +171,5 @@ class SoftonicLibs:
         })
 
         File.write_json(path_detail, headers)
-        return {
-            "path_detail": path_detail,
-            "data_detail": headers
-        }
+        return (path_detail, headers)
+        

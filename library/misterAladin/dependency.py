@@ -12,13 +12,17 @@ from icecream import ic
 from utils import *
 
 class MisterAladinLibs:
+        
     def __init__(self) -> None:
         load_dotenv()
+
         self.API_HOTELS = 'https://www.misteraladin.com/api/hotels/searches'
         self.API_TOURIST = 'https://www.misteraladin.com/api/generals/poi/nearby'
         self.API_DETAIL = 'https://www.misteraladin.com/api/hotel-review/review/hotel/328473?sort=newest&page=1&perpage=10'
         self.API_ROOM = 'https://www.misteraladin.com/api/hotels/v2/627676/availability?check_in=2024-01-30&night=1&occupancy=2&room_quantity=1&lang=id'
         self.MAIN_URL = 'https://www.misteraladin.com'
+        self.API_REVIEW = 'https://www.misteraladin.com/api/hotel-review/review/hotel/'
+        self.DOMAIN = 'www.misteraladin.com'
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True, redirect_url=self.MAIN_URL, handle_forbidden=True)
 

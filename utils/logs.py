@@ -8,6 +8,7 @@ from component import codes
 from time import time
 
 from utils import *
+from .runtime import Runtime
 class Logs:
     def __init__(self, domain: str, path_log: str, path_monitoring: str) -> None:
 
@@ -67,6 +68,8 @@ class Logs:
             "message": message,
             "assign": "Rio"
         }
+
+        Runtime.info(sub_source, total, success, failed)
 
         for index, data in enumerate(self.__monitorings):
             if id_product == data["id_sub_source"]:
@@ -147,7 +150,7 @@ class Logs:
         # File.write_json(path, header)
 
     def zero(self, func: any, header: dict):
-        ic('panggil int')
+        
         func.logging(id_product=header["id"],
                         id_review=None,
                         status_conditions='done',

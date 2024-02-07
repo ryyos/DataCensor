@@ -13,21 +13,15 @@ from component import codes
 from tqdm import tqdm
 from utils import *
 
-class MisterAladin:
+class MisterAladin(MisterAladinLibs):
     def __init__(self) -> None:
-
-        self.MAIN_URL = 'https://www.misteraladin.com/'
-        self.API_REVIEW = 'https://www.misteraladin.com/api/hotel-review/review/hotel/'
-        self.DOMAIN = 'www.misteraladin.com'
-
-        self.__aladin = MisterAladinLibs()
+        super().__init__()
+        
         self.__executor = ThreadPoolExecutor(max_workers=5)
         ...
 
     def get_reviews(self, headers: dict) -> None:
-        response: Response = self.__aladin.api.get(url=self.API_REVIEW+str(headers["id"]), params=self.__aladin.build_param_review(1))
-
-        ic(response.url)        
+        response: Response = self.api.get(url=self.API_REVIEW+str(headers["id"]), params=self.build_param_review(1))
 
         all_reviews: List[dict] = []
         error: List[dict] = []
@@ -40,10 +34,9 @@ class MisterAladin:
                     "category_rating": detail["name_en"]
                 } for detail in response.json()["data"]["criteria"]
             ]
-
             
             for page in range(response.json()["meta"]["total_pages"]):
-                response: Response = self.__aladin.api.get(url=self.API_REVIEW+str(headers["id"]), params=self.__aladin.build_param_review(page))
+                response: Response = self.api.get(url=self.API_REVIEW+str(headers["id"]), params=self.build_param_review(page))
 
                 reviews = [{
                   "id_review": review["category"]["id"],
@@ -79,7 +72,7 @@ class MisterAladin:
             total_error = 0
             for index, review in enumerate(all_reviews):
 
-                path = f'{self.__aladin.create_dir(headers)}/{review["username_reviews"]}.json'
+                path = f'{self.create_dir(headers)}/{review["username_reviews"]}.json'
                 
                 headers["reviews_rating"]["detail_total_rating"] = detail_reviews
                 headers.update({
@@ -88,10 +81,10 @@ class MisterAladin:
                     "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
                 })
 
-                response: int = self.__aladin.s3.upload(path, Dekimashita.vdict(headers, ['\n', '\r']), self.__aladin.bucket)
-                # response = 200
+                # response: int = self.s3.upload(path, Dekimashita.vdict(headers, ['\n', '\r']), self.bucket)
+                response = 200
 
-                self.__aladin.logs.logsS3(func=self.__aladin.logs,
+                self.logs.logsS3(func=self.logs,
                                             all_reviews=all_reviews,
                                             error=error,
                                             header=headers,
@@ -102,13 +95,13 @@ class MisterAladin:
                 # File.write_json(path, Dekimashita.vdict(headers, ['\n']))
 
         ic('panggil out')
-        self.__aladin.logs.zero(func=self.__aladin.logs,
+        self.logs.zero(func=self.logs,
                                   header=headers)
         
         ...
 
     def extract_detail(self, hotel: dict, url: str) -> dict[str, any]:
-        response: Response = self.__aladin.api.get(url)
+        response: Response = self.api.get(url)
         html = PyQuery(response.text)
 
         headers = {
@@ -126,12 +119,12 @@ class MisterAladin:
             "category_reviews": "travel",
             "star_hotel": hotel["star_rating"],
 
-            "description": Dekimashita.vtext(self.__aladin.set_descriptions(html)),
+            "description": Dekimashita.vtext(self.set_descriptions(html)),
             "country": hotel["area"]["city"]["state"]["country"]["slug"],
             "city": hotel["area"]["city"]["slug"],
             "subdistrict": hotel["area"]["slug"],
-            "tourist_attraction": self.__aladin.tourist_attraction(hotel),
-            "available_rooms": self.__aladin.available_rooms(hotel),
+            "tourist_attraction": self.tourist_attraction(hotel),
+            "available_rooms": self.available_rooms(hotel),
 
             "total_reviews": hotel["review"]["count"],
             "reviews_rating": {
@@ -140,21 +133,21 @@ class MisterAladin:
             }
         }
 
-        path_detail = f'{self.__aladin.create_dir(headers)}/detail/{Dekimashita.vdir(headers["reviews_name"]).lower()}.json'
+        path_detail = f'{self.create_dir(headers)}/detail/{Dekimashita.vdir(headers["reviews_name"]).lower()}.json'
         headers.update({
             "path_data_raw": 'S3://ai-pipeline-statistics/'+path_detail,
             "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path_detail)
         })
 
-        # File.write_json(path_detail, Dekimashita.vdict(headers, ['\n']))
-        response = self.__aladin.s3.upload(key=path_detail, body=Dekimashita.vdict(headers, ['\n', '\r']), bucket=self.__aladin.bucket)
-        ic(response)
+        File.write_json(path_detail, Dekimashita.vdict(headers, ['\n']))
+        # response = self.s3.upload(key=path_detail, body=Dekimashita.vdict(headers, ['\n', '\r']), bucket=self.bucket)
+        # ic(response)
         self.get_reviews(headers)
         ...
 
     def extract_hotel(self, hotel: dict) -> None:
 
-        url: str = self.__aladin.build_url(hotel)
+        url: str = self.build_url(hotel)
         self.extract_detail(hotel, url)
 
         ...
@@ -166,7 +159,7 @@ class MisterAladin:
 
             page = 1
             while True:
-                hotels: list[dict] = self.__aladin.collect_hotels(city_id=city+1, page=page)
+                hotels: list[dict] = self.collect_hotels(city_id=city+1, page=page)
                 if not hotels: break
                 ic(page)
                 page+=1

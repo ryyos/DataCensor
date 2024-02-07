@@ -1,6 +1,6 @@
 [
   {
-    "Crawlling_time": "2024-02-05 11:07:58",
+    "Crawlling_time": "2024-02-07 14:45:43",
     "id_project": null,
     "project": "Data Intelligence",
     "sub_project": "data review",
@@ -14,57 +14,15 @@
     "assign": "Rio"
   },
   {
-    "Crawlling_time": "2024-02-05 11:08:04",
+    "Crawlling_time": "2024-02-07 14:45:46",
     "id_project": null,
     "project": "Data Intelligence",
     "sub_project": "data review",
     "source_name": "gofood.co.id",
     "sub_source_name": "Pisang Goreng Tanduk Jumbo Umar Bakrie, Damar 6",
     "id_sub_source": 1024678359,
-    "total_data": 113,
-    "total_success": 113,
-    "total_failed": 0,
-    "status": "done",
-    "assign": "Rio"
-  },
-  {
-    "Crawlling_time": "2024-02-05 11:08:09",
-    "id_project": null,
-    "project": "Data Intelligence",
-    "sub_project": "data review",
-    "source_name": "gofood.co.id",
-    "sub_source_name": "PAWON BULIES - Gudeg dan Ayam Goreng, Duta 1",
-    "id_sub_source": 3612196218,
-    "total_data": 34,
-    "total_success": 34,
-    "total_failed": 0,
-    "status": "done",
-    "assign": "Rio"
-  },
-  {
-    "Crawlling_time": "2024-02-05 11:08:13",
-    "id_project": null,
-    "project": "Data Intelligence",
-    "sub_project": "data review",
-    "source_name": "gofood.co.id",
-    "sub_source_name": "Asinan Betawi Umar Bakrie, Bekasi Selatan",
-    "id_sub_source": 2427904537,
-    "total_data": 96,
-    "total_success": 96,
-    "total_failed": 0,
-    "status": "done",
-    "assign": "Rio"
-  },
-  {
-    "Crawlling_time": "2024-02-05 11:08:23",
-    "id_project": null,
-    "project": "Data Intelligence",
-    "sub_project": "data review",
-    "source_name": "gofood.co.id",
-    "sub_source_name": "Kantin Aulia 1, Bekasi Selatan",
-    "id_sub_source": 2881660796,
-    "total_data": 38,
-    "total_success": 23,
+    "total_data": 114,
+    "total_success": 10,
     "total_failed": 0,
     "status": "on progess",
     "assign": "Rio"
