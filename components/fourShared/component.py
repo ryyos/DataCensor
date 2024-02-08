@@ -31,3 +31,7 @@ class FourSharedAsset:
             'sec-ch-ua-platform': '"Windows"',
             'x-security': '1531194522',
         }
+
+        self.domain = 'www.4shared.com'
+        self.main_url = 'https://www.4shared.com'
+        self.link = 'https://www.4shared.com/get/1VEFZFf8/Islam_Denounces_Terrorism.html'

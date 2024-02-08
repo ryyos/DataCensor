@@ -1,6 +1,6 @@
 import datetime as date
 
-from time import strftime
+from time import strftime, time
 from requests_html import HTMLSession
 from datetime import datetime, timezone
 
@@ -22,3 +22,6 @@ def today():
 def change_format(dates: str) -> str:
     try: return dates.replace('T', ' ')
     except Exception: return dates
+
+def epoch():
+    return int(time())
