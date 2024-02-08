@@ -34,4 +34,4 @@ class FourSharedAsset:
 
         self.domain = 'www.4shared.com'
         self.main_url = 'https://www.4shared.com'
-        self.link = 'https://www.4shared.com/get/1VEFZFf8/Islam_Denounces_Terrorism.html'
+        self.link = 'https://www.4shared.com/office/1VEFZFf8/Islam_Denounces_Terrorism.html#'

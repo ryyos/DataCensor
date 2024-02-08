@@ -30,7 +30,7 @@ class FourSharedLibs(FourSharedAsset):
         headers = {
             "link": self.link,
             "domain": self.domain,
-            "tag": [PyQuery(tag).text() for tag in html.find('#tagsDiv a')],
+            "tag": [PyQuery(tag).text() for tag in html.find('#tagsDiv a')] + [self.domain],
             "crawling_time": now(),
             "crawling_time_epoch": epoch(),
             "path_data_raw": "string",
