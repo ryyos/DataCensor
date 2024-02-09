@@ -5,6 +5,7 @@ from requests import Response
 from pyquery import PyQuery
 from typing import Dict, Tuple
 from library import FourSharedLibs
+from dekimashita import Dekimashita
 from icecream import ic
 
 from utils import *
@@ -16,12 +17,15 @@ class FourShared(FourSharedLibs):
 
 
     def extract(self, url: str, item: int = 0) -> None:
-        response: Response = self.api.get(url=url, headers=self.headers, cookies=self.cookies)
+        response: Response = self.api.get(url='https://www.4shared.com/zip/hhb1TkMQ/A008______.html')
         html = PyQuery(response.text)
 
-        (size, posted, types) = self.extract_navbar(html)
+        title = html.find('h1.fileName').text()
 
-        path = self.create_dir(title=html.find('h1.fileName').text())
+        path = f'{self.create_dir(format="json")}/{title.split(".")[0].replace(" ", "_")}.json'
+
+        (size, posted, types) = self.extract_navbar(html)
+        (name_documents, url_documents) = self.collect_document(html.find('#moreFilesIFrame').attr('src'))
 
         headers = {
             "link": self.link,
@@ -30,20 +34,26 @@ class FourShared(FourSharedLibs):
             "crawling_time": now(),
             "crawling_time_epoch": epoch(),
             "path_data_raw": path,
+            "path_data_document": "path_document",
             "path_data_clean": convert_path(path),
             "detail": {
-                "title": html.find('h1.fileName').text(),
+                "title": title,
                 "owner": html.find('a.fileOwner').text(),
                 "size": size,
                 "posted": posted,
                 "type": types,
                 "description": html.find('#fileDescriptionText').text()
             },
-            "documents": self.collect_document(html.find('#moreFilesIFrame').attr('src'))
+            "documents": name_documents
         }
 
-        File.write_json
+        # self.download(url=html.find('#btnLink').attr('href'), path=path_document)
+
+        File.write_json(path, headers)
         
+        ic(url_documents)
+        ic(len(url_documents))
+
         ...
     
     def main(self) -> None:
@@ -51,3 +61,6 @@ class FourShared(FourSharedLibs):
 
 
         ...
+
+
+

@@ -20,7 +20,7 @@ class Main:
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
-    def gofood(s3, save, thread):
+    def gofood(s3: bool, save: bool, thread: bool):
         sof = Gofood(s3, save, thread)
         sof.main()
 
@@ -29,7 +29,7 @@ class Main:
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
-    def softonic(s3, save, thread):
+    def softonic(s3: bool, save: bool, thread: bool):
         sof = Softonic(s3, save, thread)
         sof.main()
 
@@ -59,8 +59,9 @@ class Main:
 
 
     @task.command('4shared')
-    def appsapk():
-        sof = FourShared()
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    def fourShared(save: bool):
+        sof = FourShared(save)
         sof.main()
 
 if __name__=='__main__':
