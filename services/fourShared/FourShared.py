@@ -17,7 +17,7 @@ class FourShared(FourSharedLibs):
 
 
     def extract(self, url: str, item: int = 0) -> None:
-        response: Response = self.api.get(url='https://www.4shared.com/zip/hhb1TkMQ/A008______.html')
+        response: Response = self.api.get(url=url)
         html = PyQuery(response.text)
 
         title = html.find('h1.fileName').text()
@@ -47,12 +47,15 @@ class FourShared(FourSharedLibs):
             "documents": name_documents
         }
 
-        # self.download(url=html.find('#btnLink').attr('href'), path=path_document)
+        headers = self.download(html=html, header=headers)
 
         File.write_json(path, headers)
-        
-        ic(url_documents)
-        ic(len(url_documents))
+
+        if not item:
+            for index, url in enumerate(url_documents):
+                ic(url)
+                self.extract(url=url, item=index)
+                ...
 
         ...
     

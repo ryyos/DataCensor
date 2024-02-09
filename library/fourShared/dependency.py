@@ -58,7 +58,7 @@ class FourSharedLibs(FourSharedAsset):
         response = self.api.get(url)
         html = PyQuery(response.text)
 
-        url_document = html.find('input[name="d3link"]').attr('value')
+        url_document: str = html.find('input[name="d3link"]').attr('value')
         
         response = requests.get(url=url_document, 
                                 cookies=self.cookies, 
@@ -70,9 +70,18 @@ class FourSharedLibs(FourSharedAsset):
                                 cookies=self.cookies, 
                                 headers=self.headers)
 
+        path_document = f'{self.create_dir(url_document.split("?")[0].split(".")[-1])}/{header["detail"]["title"].split(".")[0].replace(" ", "_")}.{url_document.split("?")[0].split(".")[-1]}'
+        ic(response.headers)
+        ic(url_document)
+        ic(path_document)
+        header.update({
+            "path_data_document": path_document
+        })
         
-        with open(path, 'wb') as f:
+        with open(path_document, 'wb') as f:
             f.write(response.content)
+
+        return header
         ...
 
 

@@ -25,7 +25,6 @@ class FourSharedAsset:
             'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
             'Connection': 'keep-alive',
-            'Referer': 'https://www.4shared.com/get/1VEFZFf8/Islam_Denounces_Terrorism.html',
             'Sec-Fetch-Dest': 'empty',
             'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'same-origin',
