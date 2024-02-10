@@ -7,14 +7,12 @@ from typing import Dict, Tuple
 from library import FourSharedLibs
 from dekimashita import Dekimashita
 from icecream import ic
-
 from utils import *
 
 class FourShared(FourSharedLibs):
     def __init__(self, save: bool) -> None:
         super().__init__(save)
         ...
-
 
     def extract(self, url: str, item: int = 0) -> None:
         response: Response = self.api.get(url=url)
@@ -49,12 +47,15 @@ class FourShared(FourSharedLibs):
 
         headers = self.download(html=html, header=headers)
 
+        # self.update_cookies()
+
+
         File.write_json(path, headers)
 
         if not item:
             for index, url in enumerate(url_documents):
                 ic(url)
-                self.extract(url=url, item=index)
+                self.extract(url=url, item=index+1)
                 ...
 
         ...

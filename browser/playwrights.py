@@ -1,7 +1,7 @@
 import asyncio
 
 from icecream import ic
-from playwright.async_api import async_playwright, BrowserContext, Browser
+from playwright.async_api import async_playwright, BrowserContext, Browser, Page
 from time import sleep
 
 class Playwright:

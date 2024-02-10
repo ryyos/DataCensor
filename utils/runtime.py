@@ -27,3 +27,7 @@ class Runtime:
        @staticmethod
        def s3(bucket: str, response: int) -> None:
               logger.info(f'[ {style("UPLOAD TO S3", fg="bright_green")} ] :: {style(f"bucket", fg="magenta")}: [ {bucket} ] | {style("response", fg="magenta")}: [ {response} ]')
+
+       @staticmethod
+       def end(start: float, end: float) -> float:
+              logger.info(f'[ {style(end, fg="red")} ] :: {style(f"time", fg="magenta")}: [ {start - end} ]')

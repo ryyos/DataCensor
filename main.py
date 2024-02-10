@@ -1,5 +1,7 @@
 import os
 import click
+from time import perf_counter
+from utils import Runtime
 
 from services import Softonic
 from services import AppsApk
@@ -61,8 +63,14 @@ class Main:
     @task.command('4shared')
     @click.option('--save', '-sv',  is_flag=True, default=False)
     def fourShared(save: bool):
+        start = perf_counter()
+
         sof = FourShared(save)
         sof.main()
+
+        Runtime.end(start, perf_counter())
+
+
 
 if __name__=='__main__':
     main = Main()

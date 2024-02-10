@@ -9,6 +9,7 @@ from pyquery import PyQuery
 from concurrent.futures import ThreadPoolExecutor
 from icecream import ic
 from dekimashita import Dekimashita
+from browser import SyncPlaywright, BrowserContext, Page
 
 from components import FourSharedAsset
 from utils import *
@@ -19,9 +20,31 @@ class FourSharedLibs(FourSharedAsset):
 
         self.api = ApiRetry(show_logs=True)
         self.executor = ThreadPoolExecutor()
+        self.browser: BrowserContext = SyncPlaywright.browser()
 
         self.SAVE_TO_LOKAL = save
 
+        ...
+
+    def update_cookies(self) -> None:
+        page: Page = self.browser.new_page()
+
+        page.goto(url=self.login)
+
+        page.get_by_placeholder('Login').fill(self.EMAIL)
+        page.get_by_role("textbox", name="Sandi").fill(self.PASS)
+        page.get_by_role("button", name="Login »").click()
+        sleep(30)
+
+        for cookie in self.browser.cookies():
+            self.cookies.update({
+                cookie["name"]: cookie["value"]
+            })
+            ...
+
+        File.write_json('private/cookies.json', self.cookies)
+        page.close()
+        self.browser.close()
         ...
 
     def extract_navbar(self, html: PyQuery) -> Tuple[str]:
