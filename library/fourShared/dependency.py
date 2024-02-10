@@ -33,7 +33,7 @@ class FourSharedLibs(FourSharedAsset):
         page.get_by_placeholder('Login').fill(self.EMAIL)
         page.get_by_role("textbox", name="Sandi").fill(self.PASS)
         page.get_by_role("button", name="Login »").click()
-        sleep(20)
+        sleep(10)
 
         for cookie in self.browser.cookies():
             self.cookies.update({

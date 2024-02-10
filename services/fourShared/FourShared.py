@@ -7,6 +7,8 @@ from typing import Dict, Tuple
 from library import FourSharedLibs
 from dekimashita import Dekimashita
 from concurrent.futures import wait
+from time import sleep
+
 from utils import *
 
 class FourShared(FourSharedLibs):
@@ -60,13 +62,13 @@ class FourShared(FourSharedLibs):
 
         headers = self.download(html=html, header=headers)
 
-
         File.write_json(path, headers)
 
         if not item:
 
             task_executors = []
             for index, url in enumerate(url_documents):
+                
                 component = (url, index+1)
 
                 if self.USING_THREADS: 

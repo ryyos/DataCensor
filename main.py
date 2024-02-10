@@ -23,7 +23,7 @@ class Main:
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
     def gofood(s3: bool, save: bool, thread: bool):
-        sof = Gofood(s3, save, thread)
+        sof = Gofood(save=save, s3=s3, thread=thread)
         sof.main()
 
 
@@ -32,7 +32,7 @@ class Main:
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
     def softonic(s3: bool, save: bool, thread: bool):
-        sof = Softonic(s3, save, thread)
+        sof = Softonic(save=save, s3=s3, thread=thread)
         sof.main()
 
 
