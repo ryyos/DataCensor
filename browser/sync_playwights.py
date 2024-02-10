@@ -9,9 +9,9 @@ class SyncPlaywright:
         ...
 
     @staticmethod
-    def browser() -> BrowserContext:
+    def browser(headless: bool) -> BrowserContext:
         playwright = sync_playwright().start()
-        browser: Browser = playwright.chromium.launch(headless=False, args=['--window-position=-8,-2'])
+        browser: Browser = playwright.chromium.launch(headless=headless, args=['--window-position=-8,-2'])
         browser: BrowserContext = browser.new_context()
         return browser
     

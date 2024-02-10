@@ -30,4 +30,4 @@ class Runtime:
 
        @staticmethod
        def end(start: float, end: float) -> float:
-              logger.info(f'[ {style(end, fg="red")} ] :: {style(f"time", fg="magenta")}: [ {start - end} ]')
+              logger.info(f'[ {style("SUCCESS", fg="red")} ] :: {style(f"time", fg="magenta")}: [ {end - start} ]')

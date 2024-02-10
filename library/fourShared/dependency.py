@@ -7,7 +7,6 @@ from ApiRetrys import ApiRetry
 from requests import Response
 from pyquery import PyQuery
 from concurrent.futures import ThreadPoolExecutor
-from icecream import ic
 from dekimashita import Dekimashita
 from browser import SyncPlaywright, BrowserContext, Page
 
@@ -20,7 +19,7 @@ class FourSharedLibs(FourSharedAsset):
 
         self.api = ApiRetry(show_logs=True)
         self.executor = ThreadPoolExecutor()
-        self.browser: BrowserContext = SyncPlaywright.browser()
+        self.browser: BrowserContext = SyncPlaywright.browser(headless=True)
 
         self.SAVE_TO_LOKAL = save
 
@@ -34,7 +33,7 @@ class FourSharedLibs(FourSharedAsset):
         page.get_by_placeholder('Login').fill(self.EMAIL)
         page.get_by_role("textbox", name="Sandi").fill(self.PASS)
         page.get_by_role("button", name="Login »").click()
-        sleep(30)
+        sleep(20)
 
         for cookie in self.browser.cookies():
             self.cookies.update({
@@ -48,9 +47,17 @@ class FourSharedLibs(FourSharedAsset):
         ...
 
     def extract_navbar(self, html: PyQuery) -> Tuple[str]:
-        (size, posted, types, _) = html.find('p.fileInfo').text().split(' |')
+        try:
+            (size, posted, types, _) = html.find('p.fileInfo').text().split(' |')
+            return (' '.join(size.split(' ')[1:]), posted.strip(), types.strip())
+        
+        except Exception:
+            size = html.find('div.id3tag:nth-child(2)').text()
+            posted = html.find('div[class="generalUsername clearFix"] > span').text()
+            types = html.find('div.id3tag:first-child').text()
 
-        return (' '.join(size.split(' ')[1:]), posted.strip(), types.strip())
+            return (' '.join(size.split(' ')[1:]).strip(), posted.strip(), ' '.join(types.split(' ')[-1]).strip())
+
         ...
 
     def create_dir(self, format: str) -> str:
@@ -78,6 +85,9 @@ class FourSharedLibs(FourSharedAsset):
     def download(self, html: PyQuery, header: Dict[str, any]) -> Dict[str, any]:
 
         url = html.find('#btnLink').attr('href')
+        if not url:
+            url = html.find('input[class="jsDLink"]').attr('value')
+
         response = self.api.get(url)
         html = PyQuery(response.text)
 
@@ -94,9 +104,6 @@ class FourSharedLibs(FourSharedAsset):
                                 headers=self.headers)
 
         path_document = f'{self.create_dir(url_document.split("?")[0].split(".")[-1])}/{header["detail"]["title"].split(".")[0].replace(" ", "_")}.{url_document.split("?")[0].split(".")[-1]}'
-        ic(response.headers)
-        ic(url_document)
-        ic(path_document)
         header.update({
             "path_data_document": path_document
         })

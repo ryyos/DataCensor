@@ -6,24 +6,37 @@ from pyquery import PyQuery
 from typing import Dict, Tuple
 from library import FourSharedLibs
 from dekimashita import Dekimashita
-from icecream import ic
+from concurrent.futures import wait
 from utils import *
 
 class FourShared(FourSharedLibs):
-    def __init__(self, save: bool) -> None:
+    def __init__(self, save: bool, s3: bool, thread: bool) -> None:
         super().__init__(save)
+        self.update_cookies()
+
+        self.SAVE_TO_S3 = s3
+        self.SAVE_TO_LOKAL = save
+        self.USING_THREADS = thread
         ...
 
-    def extract(self, url: str, item: int = 0) -> None:
+    def extract(self, component: Tuple[str]) -> None:
+        (url, item) = component
+
         response: Response = self.api.get(url=url)
         html = PyQuery(response.text)
 
         title = html.find('h1.fileName').text()
+        if not title:
+            title = html.find('div[class="generalFilename"]').text()
 
         path = f'{self.create_dir(format="json")}/{title.split(".")[0].replace(" ", "_")}.json'
 
         (size, posted, types) = self.extract_navbar(html)
-        (name_documents, url_documents) = self.collect_document(html.find('#moreFilesIFrame').attr('src'))
+
+        name_documents = None
+        try:
+            (name_documents, url_documents) = self.collect_document(html.find('#moreFilesIFrame').attr('src'))
+        except Exception: ...
 
         headers = {
             "link": self.link,
@@ -47,21 +60,30 @@ class FourShared(FourSharedLibs):
 
         headers = self.download(html=html, header=headers)
 
-        # self.update_cookies()
-
 
         File.write_json(path, headers)
 
         if not item:
+
+            task_executors = []
             for index, url in enumerate(url_documents):
-                ic(url)
-                self.extract(url=url, item=index+1)
+                component = (url, index+1)
+
+                if self.USING_THREADS: 
+                    task_executors.append(self.executor.submit(self.extract, component))
+                else:
+                    self.extract(component)
                 ...
+            
+            wait(task_executors)
 
         ...
     
     def main(self) -> None:
-        self.extract(self.link)
+        component = (self.link, 0)
+
+        self.extract(component)
+        self.executor.shutdown(wait=True)
 
 
         ...
