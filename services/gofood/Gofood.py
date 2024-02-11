@@ -20,39 +20,11 @@ class Gofood(GofoodLibs):
     def __init__(self, s3: bool, save: bool, thread: bool) -> None:
         super().__init__(save)
 
+        self.__executor = ThreadPoolExecutor()
+
         self.SAVE_TO_S3 = s3
         self.SAVE_TO_LOKAL = save
         self.USING_THREADS = thread
-
-        self.__executor = ThreadPoolExecutor()
-        self.__char: str = []
-
-        self.DOMAIN = 'gofood.co.id'
-        self.MAIN_URL = 'https://gofood.co.id'
-
-        self.API_CITY = f'https://gofood.co.id/_next/data/{self.VERSION}/id/cities.json' # 89
-        self.RESTAURANT = f'https://gofood.co.id/_next/data/{self.VERSION}/id/jakarta/restaurants.json' # 94
-        self.NEAR_ME_API = f'https://gofood.co.id/_next/data/{self.VERSION}/id/jakarta/bekasi-restaurants/near_me.json' 
-        self.FOODS_API = f'https://gofood.co.id/api/outlets'
-        self.API_REVIEW = f'https://gofood.co.id/_next/data/{self.VERSION}/id/jakarta/restaurant/mcdonald-s-pekayon-50150204-8f6d-4372-8458-668f1be126e8/reviews.json?id=mcdonald-s-pekayon-50150204-8f6d-4372-8458-668f1be126e8'
-        self.API_REVIEW_PAGE = 'https://gofood.co.id/api/outlets/'
-
-        self.PRICE = {
-            '0': 'Not Set',
-            '1': '<16k',
-            '2': '16k-40k',
-            '3': '40k-100k',
-            '4': '>100k',
-        }
-
-        self.RATING = {
-            "CANNED_RESPONSE_TASTE": "taste",
-            "CANNED_RESPONSE_PORTION": "portion",
-            "CANNED_RESPONSE_PACKAGING": "packaging",
-            "CANNED_RESPONSE_FRESHNESS": "freshness",
-            "CANNED_RESPONSE_VALUE": "prices",
-            "CANNED_RESPONSE_HYGIENE": "hygiene",
-        }
 
 
     def __get_review(self, raw_json: dict):
@@ -203,7 +175,6 @@ class Gofood(GofoodLibs):
                         "card": card
                     })
                     
-                    self.__char.append(api_review)
 
     def __extract_city(self, city: str) -> None:
         response = self.api.get(url=f'https://gofood.co.id/_next/data/{self.VERSION}/id{city["path"]}.json', max_retries=10)

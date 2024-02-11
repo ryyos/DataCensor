@@ -39,8 +39,8 @@ class FourSharedShere:
         new_path: str = self.NEW_PATH+file_format
         new_document_path: str = self.NEW_PATH+document_format
 
-        path = f'{new_path}/{file_name}'
-        document_path = f'{new_document_path}/{document_name}'
+        path: str = f'{new_path}/{file_name}'
+        document_path: str = f'{new_document_path}/{document_name}'
 
         ic(path)
         

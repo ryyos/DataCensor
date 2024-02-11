@@ -2,16 +2,19 @@ import os
 
 from typing import List
 from icecream import ic
+from dotenv import load_dotenv
+
+from components import codes, GofoodComponent
 from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
 from server.s3 import ConnectionS3
-from components import codes
-from dotenv import load_dotenv
+
 from utils import *
 
-class GofoodLibs:
+class GofoodLibs(GofoodComponent):
     def __init__(self, save: bool) -> None:
         load_dotenv()
+        
         self.api = ApiRetry(show_logs=True, handle_forbidden=True, redirect_url='https://gofood.co.id', defaulth_headers=True)
 
         self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
@@ -25,11 +28,6 @@ class GofoodLibs:
                             domain='gofood.co.id')
 
         self.SAVE_TO_LOKAL = save
-
-        self.bucket = os.getenv('BUCKET')
-        self.VERSION = '9.0.2'
-        self.FOODS_API = f'https://gofood.co.id/api/outlets'
-        self.API_REVIEW_PAGE = 'https://gofood.co.id/api/outlets/'
         ...
 
 
