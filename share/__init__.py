@@ -1,1 +1,1 @@
-from .shared import FourSharedShere
+from .fourShared.shared import FourSharedShere
