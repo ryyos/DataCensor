@@ -122,7 +122,8 @@ celerybeat.pid
 # Environments
 .env
 .venv
-component
+components
+components/fourShared
 private
 logs
 data
