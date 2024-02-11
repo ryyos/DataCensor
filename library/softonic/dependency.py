@@ -5,14 +5,15 @@ from zlib import crc32
 from typing import Tuple, List
 from requests import Response
 from pyquery import PyQuery
+from dotenv import load_dotenv
+
 from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
 from server.s3 import ConnectionS3
-from dotenv import load_dotenv
-
+from components import SoftonicComponent
 from utils import *
 
-class SoftonicLibs:
+class SoftonicLibs(SoftonicComponent):
     def __init__(self, save: bool) -> None:
         load_dotenv()
 
@@ -30,15 +31,8 @@ class SoftonicLibs:
                                  endpoint_url=os.getenv('ENDPOINT'),
                                  )
         
-        self._bucket = os.getenv('BUCKET')
-
         self.SAVE_TO_LOKAL = save
-
-        self.API_REVIEW = 'https://disqus.com/api/3.0/threads/listPostsThreaded'
-        self.API_KEY = 'E8Uh5l5fHZ6gD8U3KycjAIAk46f68Zw7C6eW8WSjZvCLXebZ7p0r1yrYDrLilk2F'
-        self.DISQUS_API_COMMENT = 'https://disqus.com/embed/comments'
-        self.MAIN_DOMAIN = 'en.softonic.com'
-        self.MAIN_URL = 'https://en.softonic.com/'
+        
         ...
         
     def collect_categories(self, url: str) -> List[str]:

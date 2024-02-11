@@ -21,21 +21,6 @@ class Softonic(SoftonicLibs):
         self.SAVE_TO_LOKAL = save
         self.USING_THREADS = thread
 
-
-        self.TYPES = [
-            "new-apps",
-            "trending",
-            "date",
-            "last-news",
-            "new-versions"
-        ]
-
-        self.PLATFORMS = [
-            "windows",
-            "android",
-            "mac",
-            "iphone"
-        ]
         ...
 
     def __extract_review(self, raw_game: str) -> None: # halaman game
@@ -89,7 +74,7 @@ class Softonic(SoftonicLibs):
         if self.SAVE_TO_S3: 
             self.s3.upload(key=path_detail, 
                          body=data_detail, 
-                         bucket=self._bucket)
+                         bucket=self.bucket)
 
         ...
 
@@ -143,7 +128,7 @@ class Softonic(SoftonicLibs):
             })
 
             if self.SAVE_TO_S3: 
-                response = self.s3.upload(key=path, body=raw_game, bucket=self._bucket)
+                response = self.s3.upload(key=path, body=raw_game, bucket=self.bucket)
             else: 
                 response = 200
             
