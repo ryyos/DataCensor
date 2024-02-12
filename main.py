@@ -11,6 +11,8 @@ from services import MisterAladin
 from services import Indeed
 from services import FourShared
 
+from share import Share
+
 class Main:
 
     @click.group()
@@ -25,6 +27,10 @@ class Main:
     @task.group('admiralty')
     @staticmethod
     def admiralty(): ...
+
+    @task.group('shared')
+    @staticmethod
+    def shared():... 
 
     """ <----------------------[ REVIEWS ]-------------------------->"""
 
@@ -91,6 +97,13 @@ class Main:
         sof.main()
 
         Runtime.end(start, perf_counter())
+
+    """ <----------------------[ ADMIRALTY ]-------------------------->"""
+
+    @task.command('4shared')
+    def fourShared():
+        four = Share()
+        four.main()
 
 
 
