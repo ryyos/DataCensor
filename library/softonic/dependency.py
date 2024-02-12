@@ -15,6 +15,7 @@ from utils import *
 
 class SoftonicLibs(SoftonicComponent):
     def __init__(self, save: bool) -> None:
+        super().__init__()
         load_dotenv()
 
         self.api = ApiRetry(show_logs=False, 

@@ -40,9 +40,6 @@ class AppsApk(AppsApkLibs):
         try: int(total_review = app.find('h3[class="comment-title main-box-title"]').text().split(' ')[0])
         except Exception: total_review = None
 
-        logger.info(f'total review: {total_review}')
-        logger.info(f'url_app: {url_app}')
-
         results = {
             "link": self.MAIN_URL,
             "domain": self.MAIN_DOMAIN,
