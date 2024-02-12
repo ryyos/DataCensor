@@ -22,15 +22,14 @@ from utils import *
 from dotenv import *
 
 class AppsApk(AppsApkLibs):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, s3: bool, save: bool, thread: bool) -> None:
+        super().__init__(save)
 
         self.__executor = ThreadPoolExecutor(max_workers=5)
-        self.__appsapk = AppsApkLibs()
 
-        self.MAIN_DOMAIN = 'www.appsapk.com'
-        self.MAIN_URL = 'https://www.appsapk.com'
-        self.MAIN_PATH = 'data'
+        self.SAVE_TO_S3 = s3
+        self.SAVE_TO_LOKAL = save
+        self.USING_THREADS = thread
         
         ...
 
@@ -86,9 +85,13 @@ class AppsApk(AppsApkLibs):
         })
 
         try:
-            response = self.s3.upload(key=path_detail, body=results, bucket=self.bucket)
-            ic(response)
-            # self.__appsapk.write_detail(headers=results)
+
+            if self.SAVE_TO_S3:
+                response = self.s3.upload(key=path_detail, body=results, bucket=self.bucket)
+
+            if self.SAVE_TO_LOKAL:
+                self.write_detail(headers=results)
+
         except Exception as err:
             ic(err)
 
@@ -99,7 +102,7 @@ class AppsApk(AppsApkLibs):
 
         header: dict = self.__extract_app(url_app)
 
-        reviews: dict = self.__appsapk.collect_reviews(url_app)
+        reviews: dict = self.collect_reviews(url_app)
 
         total_error = 0
         for index, review in enumerate(reviews["all_reviews"]):
@@ -132,9 +135,6 @@ class AppsApk(AppsApkLibs):
                 }
             })
 
-            logger.info(f'username: {header["detail_reviews"]["username_reviews"]}')
-
-            ic(bool(PyQuery(review).find('ul[class="children"]')))
             if PyQuery(review).find('ul[class="children"]'):
                 child = PyQuery(review).find('ul[class="children"]')
                 for reply in PyQuery(child).find('li'):
@@ -151,10 +151,14 @@ class AppsApk(AppsApkLibs):
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            response = self.s3.upload(key=path, body=header, bucket=self.bucket)
+            if self.SAVE_TO_S3:
+                response = self.s3.upload(key=path, body=header, bucket=self.bucket)
 
-            # response = 200
-            # if index in [2,5,6,4,9,6,11,12]: response = 404
+            else: 
+                response = 200
+
+            if self.SAVE_TO_LOKAL:
+                File.write_json(path, header)
 
             error: int = self.logs.logsS3(func=self.logs,
                                header=header,
@@ -168,7 +172,7 @@ class AppsApk(AppsApkLibs):
             total_error+=error
             reviews["error"].clear()
 
-        if not reviews["all_reviews"]:
+        if not reviews["all_reviews"] and self.SAVE_TO_S3:
             self.logs.zero(func=self.logs,
                              header=header)
         ...
@@ -179,14 +183,18 @@ class AppsApk(AppsApkLibs):
         while True:
             url = f'{self.MAIN_URL}/page/{page}'
             page +=1
-            apps = self.__appsapk.collect_apps(url)
+            apps = self.collect_apps(url)
 
             task_executor = []
             for app in apps:
-                # task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
 
-                self.__extract_reviews(PyQuery(app).attr('href'))
-            # wait(task_executor)
+                if self.USING_THREADS:
+                    task_executor.append(self.__executor.submit(self.__extract_reviews, PyQuery(app).attr('href')))
+
+                else:
+                    self.__extract_reviews(PyQuery(app).attr('href'))
+
+            wait(task_executor)
             if not apps: break
-        # self.__executor.shutdown(wait=True)
+        self.__executor.shutdown(wait=True)
         ...

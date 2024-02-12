@@ -37,8 +37,11 @@ class Main:
 
 
     @task.command('appsapk')
-    def appsapk():
-        sof = AppsApk()
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    def appsapk(s3: bool, save: bool, thread: bool):
+        sof = AppsApk(save=save, s3=s3, thread=thread)
         sof.main()
 
 

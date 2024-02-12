@@ -1,17 +1,21 @@
 import os
 
-from components import codes
 from typing import List
 from pyquery import PyQuery
+from dotenv import load_dotenv
+
+from server.s3 import ConnectionS3
+from components import codes
 from ApiRetrys import ApiRetry
 from dekimashita import Dekimashita
-from server.s3 import ConnectionS3
-from dotenv import load_dotenv
+from components import AppsApkComponent
 from utils import *
 
-class AppsApkLibs:
-    def __init__(self) -> None:
+class AppsApkLibs(AppsApkComponent):
+    def __init__(self, save: bool) -> None:
+        super().__init__()
         load_dotenv()
+
         self.api = ApiRetry(defaulth_headers=True, show_logs=True, handle_forbidden=True, redirect_url='https://www.appsapk.com')
         self.logs = Logs(path_monitoring='logs/appsapk/monitoring_data.json',
                             path_log='logs/appsapk/monitoring_logs.json',
@@ -22,7 +26,8 @@ class AppsApkLibs:
                                  endpoint_url=os.getenv('ENDPOINT'),
                                  )
         
-        self.bucket = os.getenv('BUCKET')
+
+        self.SAVE_TO_LOKAL = save
 
         ...
 
@@ -43,7 +48,8 @@ class AppsApkLibs:
             "path_data_clean": convert_path(path_detail)
         })
 
-        File.write_json(path_detail, headers)
+        if self.SAVE_TO_LOKAL:
+            File.write_json(path_detail, headers)
         
         ...
 
