@@ -79,7 +79,7 @@ class FourSharedShere:
             else:
 
                 for file in File.list_dir(self.PATH_DATA+dir):
-                    ic(file)
+                    
                     source_path = f'{self.PATH_DATA+dir}/{file}'
                     new_path = f'{self.NEW_PATH+dir}/{file}'
 

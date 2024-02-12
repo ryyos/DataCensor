@@ -52,8 +52,11 @@ class Main:
 
 
     @task.command('mister_aladin')
-    def mister_aladin():
-        sof = MisterAladin()
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    def mister_aladin(s3: bool, save: bool, thread: bool):
+        sof = MisterAladin(save=save, s3=s3, thread=thread)
         sof.main()
 
 

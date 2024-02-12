@@ -1,28 +1,22 @@
 import os
 
 from requests import Response
-from ApiRetrys import ApiRetry
-from dekimashita import Dekimashita
 from pyquery import PyQuery
-from server.s3 import ConnectionS3
 from dotenv import load_dotenv
 from typing import List
 from icecream import ic
 
+from server.s3 import ConnectionS3
+from components import MisterAladinComponent
+from ApiRetrys import ApiRetry
+from dekimashita import Dekimashita
 from utils import *
 
-class MisterAladinLibs:
-        
-    def __init__(self) -> None:
-        load_dotenv()
+class MisterAladinLibs(MisterAladinComponent):
 
-        self.API_HOTELS = 'https://www.misteraladin.com/api/hotels/searches'
-        self.API_TOURIST = 'https://www.misteraladin.com/api/generals/poi/nearby'
-        self.API_DETAIL = 'https://www.misteraladin.com/api/hotel-review/review/hotel/328473?sort=newest&page=1&perpage=10'
-        self.API_ROOM = 'https://www.misteraladin.com/api/hotels/v2/627676/availability?check_in=2024-01-30&night=1&occupancy=2&room_quantity=1&lang=id'
-        self.MAIN_URL = 'https://www.misteraladin.com'
-        self.API_REVIEW = 'https://www.misteraladin.com/api/hotel-review/review/hotel/'
-        self.DOMAIN = 'www.misteraladin.com'
+    def __init__(self) -> None:
+        super().__init__()
+        load_dotenv()
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True, redirect_url=self.MAIN_URL, handle_forbidden=True)
 
@@ -52,7 +46,7 @@ class MisterAladinLibs:
         }
 
     def collect_hotels(self, city_id: int, page: int) -> List[dict[str, any]]:
-        response: Response = self.api.post(url=self.API_HOTELS, json=self.build_payload(page, city_id))
+        response: Response = self.api.post(url=self.API_HOTELS, json=self.build_payload(page, city_id), max_retries=30)
         if response.json()['data']: return response.json()['data']
         else: return None
         ...
@@ -90,7 +84,7 @@ class MisterAladinLibs:
 
     def tourist_attraction(self, hotel: dict) -> List[dict]:
         # https://www.misteraladin.com/api/generals/poi/nearby?lat=-6.184711&long=106.831482&is_active=1&include=type.icon
-        response: Response = self.api.get(url=self.API_TOURIST, params=self.build_param_tourist(hotel))
+        response: Response = self.api.get(url=self.API_TOURIST, params=self.build_param_tourist(hotel), max_retries=30)
 
         return [
             {
@@ -111,16 +105,13 @@ class MisterAladinLibs:
 
     def available_rooms(self, hotel: dict) -> List[str]:
         response: Response = self.api.get(url=f'https://www.misteraladin.com/api/hotels/v2/{hotel["id"]}/availability',
-                                          params=self.build_param_room())
+                                          params=self.build_param_room(),
+                                          max_retries=30)
         rooms: List[dict] = []
         for room in response.json()["data"]: 
             rooms.append(Dekimashita.vdict(room, ['\n', '\r']))
 
         return rooms
-        ...
-
-    def get_detail_hotel(self, id: int) -> dict:
-        response: Response = self.api.get()
         ...
 
     def create_dir(self, headers: dict) -> str:

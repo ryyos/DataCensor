@@ -14,10 +14,14 @@ from tqdm import tqdm
 from utils import *
 
 class MisterAladin(MisterAladinLibs):
-    def __init__(self) -> None:
+    def __init__(self, s3: bool, save: bool, thread: bool) -> None:
         super().__init__()
         
         self.__executor = ThreadPoolExecutor(max_workers=5)
+
+        self.SAVE_TO_S3 = s3
+        self.SAVE_TO_LOKAL = save
+        self.USING_THREADS = thread
         ...
 
     def get_reviews(self, headers: dict) -> None:
@@ -60,6 +64,7 @@ class MisterAladin(MisterAladinLibs):
                   },
                   "date_of_experience": change_format(review["reviewed_at"]),
                   "date_of_experience_epoch": convert_time(change_format(review["reviewed_at"]))
+
                 } for review in response.json()["data"]["review"]] if response.status_code == 200 else error.append({
                     "message": response.text,
                     "type": codes[str(response.status_code)],
@@ -81,8 +86,10 @@ class MisterAladin(MisterAladinLibs):
                     "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
                 })
 
-                # response: int = self.s3.upload(path, Dekimashita.vdict(headers, ['\n', '\r']), self.bucket)
-                response = 200
+                if self.SAVE_TO_S3:
+                    response: int = self.s3.upload(path, Dekimashita.vdict(headers, ['\n', '\r']), self.bucket)
+                else: 
+                    response = 200
 
                 self.logs.logsS3(func=self.logs,
                                             all_reviews=all_reviews,
@@ -92,9 +99,9 @@ class MisterAladin(MisterAladinLibs):
                                             response=response,
                                             total_err=total_error)
 
-                # File.write_json(path, Dekimashita.vdict(headers, ['\n']))
+                if self.SAVE_TO_LOKAL:
+                    File.write_json(path, Dekimashita.vdict(headers, ['\n']))
 
-        ic('panggil out')
         self.logs.zero(func=self.logs,
                                   header=headers)
         
@@ -139,9 +146,12 @@ class MisterAladin(MisterAladinLibs):
             "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path_detail)
         })
 
-        File.write_json(path_detail, Dekimashita.vdict(headers, ['\n']))
-        # response = self.s3.upload(key=path_detail, body=Dekimashita.vdict(headers, ['\n', '\r']), bucket=self.bucket)
-        # ic(response)
+        if self.SAVE_TO_LOKAL:
+            File.write_json(path_detail, Dekimashita.vdict(headers, ['\n']))
+
+        if self.SAVE_TO_S3:
+            response = self.s3.upload(key=path_detail, body=Dekimashita.vdict(headers, ['\n', '\r']), bucket=self.bucket)
+
         self.get_reviews(headers)
         ...
 
@@ -167,8 +177,10 @@ class MisterAladin(MisterAladinLibs):
                 task_executor = []
                 for hotel in tqdm(hotels, ascii=True, smoothing=0.1, total=len(hotels)):
 
-                    task_executor.append(self.__executor.submit(self.extract_hotel, hotel))
-                    # self.extract_hotel(hotel)
+                    if self.USING_THREADS:
+                        task_executor.append(self.__executor.submit(self.extract_hotel, hotel))
+                    else:
+                        self.extract_hotel(hotel)
                 
                 wait(task_executor)
                     
