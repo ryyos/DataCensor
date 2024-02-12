@@ -12,8 +12,6 @@ class FourSharedShere:
     def __init__(self) -> None:
         load_dotenv()
 
-        self.PATH_DATA = 'data/data_raw/admiralty/four_shared/'
-        self.NEW_PATH = 'data/data_raw/admiralty/four_shared/'
         self.S3_PATH = 'S3://ai-pipeline-statistics/'
 
         self.__s3 = ConnectionS3(access_key_id=os.getenv('ADMIRALTY_ACCESS_KEY_ID'),
@@ -29,48 +27,64 @@ class FourSharedShere:
         try: os.makedirs(path)
         except Exception: ...
 
-    def change_path(self, data: Dict[str, any]) -> Tuple[Dict[str, any], str]:
+    def change_path(self, data: Dict[str, any], new_path: str, start_main_path: int) -> Tuple[Dict[str, any], str]:
+        """
+        Note:
+            selalu akhiri path dengan /
+        Param:
+            data (Dict[str, any]): data dict yang ingin di rubah
+            new_path (str): path baru
+            start_main_path (int): index mulai path utama
 
-        file_name: str = data["path_data_raw"].split('/')[-1]
-        file_format: str = data["path_data_raw"].split('/')[-2]
+                ex:
+                data/data_raw/admiralty/data_radikalisme/presiden_2024/json/prabowo.json
 
-        document_name: str = data["path_data_document"].split('/')[-1]
-        document_format: str = data["path_data_document"].split('/')[-2]
+                path utama -> presiden_2024/json/prabowo.json
+                path yang akan di ganti -> data/data_raw/admiralty/data_radikalisme/
+                berarti start_main_path nya -> 3
 
-        new_path: str = self.NEW_PATH+file_format
-        new_document_path: str = self.NEW_PATH+document_format
+        Returns:
+            (data, new_path)
+        """
 
-        path: str = f'{new_path}/{file_name}'
-        document_path: str = f'{new_document_path}/{document_name}'
+        main_path: str = '/'.join(data["path_data_raw"].split('/')[start_main_path:])
+        main_document_path: str = '/'.join(data["path_data_document"].split('/')[start_main_path:])
 
-        ic(path)
+        new_path: str = new_path+main_path
+        new_document_path: str = new_path + main_document_path
         
         data.update({
-            "path_data_raw": self.S3_PATH+path,
-            "path_data_clean": self.S3_PATH+convert_path(path),
-            "path_data_document": self.S3_PATH+document_path
+            "path_data_raw": self.S3_PATH+new_path,
+            "path_data_clean": self.S3_PATH+convert_path(new_path),
+            "path_data_document": self.S3_PATH+main_document_path
         })
 
-        return (data, path)
+        return (data, new_path)
 
         ...
 
-    def main(self) -> None:
-        for dir in File.list_dir(self.PATH_DATA):
+    def main(self, source: str, new_path: str = None, change_path: bool = False) -> None:
+
+        for dir in File.list_dir(source):
 
             if 'json' in dir:
 
-                for file in File.list_dir(self.PATH_DATA+dir):
+                for file in File.list_dir(source+dir):
 
-                    source_path = f'{self.PATH_DATA}{dir}/{file}'
+                    # Jika tidak merubah path source path dan path ke s3 akan sama
+                    source_path: str = f'{source+dir}/{file}'
 
-                    data = File.read_json(source_path)
+                    data: dict = File.read_json(source_path)
                     
-                    (data, destination) = self.change_path(data)
+                    if change_path:
+                        (data, destination) = self.change_path(data)
+                    
+                    else:
+                        destination: str = source_path
+
 
                     # --> setelah update path langsung di kirim ke s3
-
-                    response = self.__s3.upload(
+                    response: int = self.__s3.upload(
                                 body=data,
                                 key=destination,
                                 bucket=self.bucket
@@ -78,14 +92,12 @@ class FourSharedShere:
                     
             else:
 
-                for file in File.list_dir(self.PATH_DATA+dir):
-                    
-                    source_path = f'{self.PATH_DATA+dir}/{file}'
-                    new_path = f'{self.NEW_PATH+dir}/{file}'
+                for file in File.list_dir(source+dir):
 
-                    # shutil.copy(source_path, new_path)
+                    # Jika tidak merubah path source path dan path ke s3 akan sama
+                    source_path: str = f'{source+dir}/{file}'
 
-                    response = self.__s3.upload_file(
+                    response: int = self.__s3.upload_file(
                                 bucket=self.bucket,
                                 key=new_path,
                                 path=source_path

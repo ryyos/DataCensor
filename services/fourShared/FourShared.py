@@ -5,21 +5,28 @@ from requests import Response
 from pyquery import PyQuery
 from typing import Dict, Tuple
 from library import FourSharedLibs
-from dekimashita import Dekimashita
 from concurrent.futures import wait
 from time import sleep
+from typing import List
 
+from dekimashita import Dekimashita
 from utils import *
 
 class FourShared(FourSharedLibs):
-    def __init__(self, save: bool, s3: bool, thread: bool) -> None:
-        super().__init__(save)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(kwargs["save"])
+
         self.update_cookies()
 
-        self.SAVE_TO_S3 = s3
-        self.SAVE_TO_LOKAL = save
-        self.USING_THREADS = thread
-        ...
+        self.type_process = kwargs["type"]
+        self.SAVE_TO_S3 = kwargs["s3"]
+        self.SAVE_TO_LOKAL = kwargs["save"]
+        self.USING_THREADS = kwargs["thread"]
+
+        self.link = kwargs["url"]
+
+        self.temp_path = None
+
 
     def extract(self, component: Tuple[str]) -> None:
         (url, item) = component
@@ -27,11 +34,16 @@ class FourShared(FourSharedLibs):
         response: Response = self.api.get(url=url)
         html = PyQuery(response.text)
 
-        title = html.find('h1.fileName').text()
+        title: str = html.find('h1.fileName').text()
         if not title:
-            title = html.find('div[class="generalFilename"]').text()
+            title: str = html.find('div[class="generalFilename"]').text()
 
-        path = f'{self.create_dir(format="json")}/{title.split(".")[0].replace(" ", "_")}.json'
+        folder: str = html.find('a[class="gaClick hideLong"]').text()
+        if not folder:
+            folder: str = self.temp_path
+
+        self.temp_path = folder
+        path: str = f'{self.create_dir(format="json", folder=folder.lower())}/{title.split(".")[0].replace(" ", "_")}.json'
 
         (size, posted, types) = self.extract_navbar(html)
 
@@ -46,9 +58,9 @@ class FourShared(FourSharedLibs):
             "tag": [PyQuery(tag).text() for tag in html.find('#tagsDiv a')] + [self.domain],
             "crawling_time": now(),
             "crawling_time_epoch": epoch(),
-            "path_data_raw": path,
+            "path_data_raw": self.BASE_PATH+path,
             "path_data_document": "path_document",
-            "path_data_clean": convert_path(path),
+            "path_data_clean": self.BASE_PATH+convert_path(path),
             "detail": {
                 "title": title,
                 "owner": html.find('a.fileOwner').text(),
@@ -57,14 +69,18 @@ class FourShared(FourSharedLibs):
                 "type": types,
                 "description": html.find('#fileDescriptionText').text()
             },
-            "documents": name_documents
         }
 
-        headers = self.download(html=html, header=headers)
+        if self.type_process != 'one':
+            headers.update({
+                "documents": name_documents
+            })
 
-        File.write_json(path, headers)
+        if self.SAVE_TO_LOKAL:
+            headers = self.download(html=html, header=headers)
+            File.write_json(path, headers)
 
-        if not item:
+        if not item and self.type_process == 'one':
 
             task_executors = []
             for index, url in enumerate(url_documents):
@@ -79,16 +95,43 @@ class FourShared(FourSharedLibs):
             
             wait(task_executors)
 
+
+    def paged(self) -> None:
+
+        while True:
+            response: Response = self.api.get(url=self.link, headers=self.headers, max_retries=30)
+            html = PyQuery(response.text)
+
+            task_executors = []
+            for card in self.collect_card(html):
+                component = (card, 0)
+
+                if self.USING_THREADS:
+                    task_executors.append(self.executor.submit(self.extract, component))
+
+                else: 
+                    self.extract(component)
+
+                ...
+
+            wait(task_executors)
+
+            if not self.link: break
+            self.link: str = self.main_url+html.find('a.pagerNext').attr('href')
+
         ...
-    
+        
     def main(self) -> None:
-        component = (self.link, 0)
 
-        self.extract(component)
-        self.executor.shutdown(wait=True)
+        match self.type_process:
+            case 'one':
+                component = (self.link, 0)
+                self.extract(component)
+                ...
 
-
+            case 'page':
+                self.paged()
+                ...
         ...
 
-
-
+        self.executor.shutdown(wait=True)

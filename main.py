@@ -12,13 +12,23 @@ from services import Indeed
 from services import FourShared
 
 class Main:
-    
+
     @click.group()
     @staticmethod
     def task(): ...
+    
+    @task.group('reviews')
+    @staticmethod
+    def reviews(): ...
 
 
-    @task.command('gofood')
+    @task.group('admiralty')
+    @staticmethod
+    def admiralty(): ...
+
+    """ <----------------------[ REVIEWS ]-------------------------->"""
+
+    @reviews.command('gofood')
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
@@ -27,7 +37,7 @@ class Main:
         sof.main()
 
 
-    @task.command('softonic')
+    @reviews.command('softonic')
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
@@ -36,7 +46,7 @@ class Main:
         sof.main()
 
 
-    @task.command('appsapk')
+    @reviews.command('appsapk')
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
@@ -45,13 +55,13 @@ class Main:
         sof.main()
 
 
-    @task.command('uptodown')
+    @reviews.command('uptodown')
     def uptodown():
         sof = Uptodown()
         sof.main()
 
 
-    @task.command('mister_aladin')
+    @reviews.command('mister_aladin')
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
@@ -60,20 +70,24 @@ class Main:
         sof.main()
 
 
-    @task.command('indeed')
+    @reviews.command('indeed')
     def indeed():
         ind = Indeed()
         ind.main()
 
 
-    @task.command('4shared')
+    """ <----------------------[ ADMIRALTY ]-------------------------->"""
+
+    @admiralty.command('4shared')
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
-    def fourShared(s3: bool, save: bool, thread: bool):
+    @click.option('--url', '-u', required=True, type=str)
+    @click.option('--type', '-t', required=True, type=str)
+    def fourShared(s3: bool, save: bool, thread: bool, url: str, type: str):
         start = perf_counter()
 
-        sof = FourShared(save=save, s3=s3, thread=thread)
+        sof = FourShared(save=save, s3=s3, thread=thread, url=url, type=type)
         sof.main()
 
         Runtime.end(start, perf_counter())
@@ -81,5 +95,7 @@ class Main:
 
 
 if __name__=='__main__':
-    main = Main()
-    main.task()
+   main = Main()
+   main.task()
+   ...
+    

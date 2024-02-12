@@ -2,7 +2,7 @@ import os
 import requests
 
 from time import sleep
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Generator
 from ApiRetrys import ApiRetry
 from requests import Response
 from pyquery import PyQuery
@@ -22,6 +22,8 @@ class FourSharedLibs(FourSharedAsset):
         self.browser: BrowserContext = SyncPlaywright.browser(headless=True)
 
         self.SAVE_TO_LOKAL = save
+
+        self.temp_path = None
 
         ...
 
@@ -57,11 +59,11 @@ class FourSharedLibs(FourSharedAsset):
             types = html.find('div.id3tag:first-child').text()
 
             return (' '.join(size.split(' ')[1:]).strip(), posted.strip(), ' '.join(types.split(' ')[-1]).strip())
-
         ...
 
-    def create_dir(self, format: str) -> str:
-        path = f'data/data_raw/admiralty/four_shared/{format}'
+    def create_dir(self, format: str, folder: str) -> str:
+        # s3://ai-pipeline-statistics/data/data_raw/admiralty/data_radikalisme/
+        path = f'data/data_raw/admiralty/data_radikalisme/{folder}/{format}'
         try:
             if self.SAVE_TO_LOKAL: os.makedirs(path)
         except Exception: ...
@@ -84,9 +86,16 @@ class FourSharedLibs(FourSharedAsset):
 
     def download(self, html: PyQuery, header: Dict[str, any]) -> Dict[str, any]:
 
-        url = html.find('#btnLink').attr('href')
+        url: str = html.find('#btnLink').attr('href')
+        folder: str = html.find('a[class="gaClick hideLong"]').text()
+
         if not url:
             url = html.find('input[class="jsDLink"]').attr('value')
+        
+        if not folder:
+            folder: str = self.temp_path
+
+        self.temp_path = folder
 
         response = self.api.get(url)
         html = PyQuery(response.text)
@@ -103,15 +112,22 @@ class FourSharedLibs(FourSharedAsset):
                                 cookies=self.cookies, 
                                 headers=self.headers)
 
-        path_document = f'{self.create_dir(url_document.split("?")[0].split(".")[-1])}/{header["detail"]["title"].split(".")[0].replace(" ", "_")}.{url_document.split("?")[0].split(".")[-1]}'
+        path_document = f'{self.create_dir(format=url_document.split("?")[0].split(".")[-1], folder=folder)}/{header["detail"]["title"].split(".")[0].replace(" ", "_")}.{url_document.split("?")[0].split(".")[-1]}'
         header.update({
-            "path_data_document": path_document
+            "path_data_document": self.BASE_PATH+path_document
         })
         
         with open(path_document, 'wb') as f:
             f.write(response.content)
 
         return header
+        ...
+
+    def collect_card(self, html: PyQuery) -> Generator[str, any, None]:
+
+        for card in html.find('div[class="hideLong simpleTumbName"] a'):
+            yield PyQuery(card).attr('href')
+
         ...
 
 

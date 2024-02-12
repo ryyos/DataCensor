@@ -45,8 +45,9 @@ class FourSharedAsset:
 
         self.domain = 'www.4shared.com'
         self.main_url = 'https://www.4shared.com'
-        self.link = 'https://www.4shared.com/office/1VEFZFf8/Islam_Denounces_Terrorism.html#'
         self.login = 'https://www.4shared.com/web/login?locale=in'
 
         self.EMAIL = 'swiperhat@tutanota.com'
         self.PASS = '*Swiper123'
+
+        self.BASE_PATH = 's3://ai-pipeline-statistics/'
