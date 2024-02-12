@@ -13,7 +13,7 @@ class FourSharedShere:
         load_dotenv()
 
         self.PATH_DATA = 'data/data_raw/admiralty/four_shared/'
-        self.NEW_PATH = 'data/data_raw/hehe/'
+        self.NEW_PATH = 'data/data_raw/admiralty/four_shared/'
         self.S3_PATH = 'S3://ai-pipeline-statistics/'
 
         self.__s3 = ConnectionS3(access_key_id=os.getenv('ADMIRALTY_ACCESS_KEY_ID'),
@@ -22,6 +22,7 @@ class FourSharedShere:
                                  )
 
         self.bucket = os.getenv('ADMIRALTY_BUCKET')
+        ic(self.bucket)
         ...
     
     def create_dir(self, path: str) -> None:
@@ -78,6 +79,7 @@ class FourSharedShere:
             else:
 
                 for file in File.list_dir(self.PATH_DATA+dir):
+                    ic(file)
                     source_path = f'{self.PATH_DATA+dir}/{file}'
                     new_path = f'{self.NEW_PATH+dir}/{file}'
 
