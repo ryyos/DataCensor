@@ -39,7 +39,7 @@ class GofoodLibs(GofoodComponent):
         ...
 
     def collect_cities(self, url: str) -> List[str]:
-        response = self.api.get(url=url)
+        response = self.api.get(url=url, max_retries=30)
 
         return response.json()["pageProps"]["contents"][0]["data"]
         ...
@@ -90,6 +90,7 @@ class GofoodLibs(GofoodComponent):
         while True:
 
             response = self.api.post(url=self.FOODS_API,
+                                    max_retries=30,
                                     json=self.buld_payload(page=page_token, 
                                                               latitude=latitude,
                                                               longitude=longitude
