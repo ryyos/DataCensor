@@ -1,6 +1,7 @@
 
 from requests import Response
 from icecream import ic
+from pyquery import PyQuery
 
 from library import JihadimalmoLibs
 
@@ -15,5 +16,10 @@ class Jihadimalmo(JihadimalmoLibs):
 
     def main(self) -> None:
         response: Response = self.api.get(self.main_url)
+        html = PyQuery(response.text)
+
+        for year, url in self.collect_years(html):
+            
+            ...
 
         ...
