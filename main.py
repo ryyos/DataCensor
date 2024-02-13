@@ -94,6 +94,18 @@ class Main:
 
         Runtime.end(start, perf_counter())
 
+    @admiralty.command('jihadimalmo')
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    def jihadimalmo(s3: bool, save: bool, thread: bool):
+        start = perf_counter()
+
+        sof = Jihadimalmo(save=save, s3=s3, thread=thread)
+        sof.main()
+
+        Runtime.end(start, perf_counter())
+
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
     @shared.command('share')
