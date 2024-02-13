@@ -5,3 +5,4 @@ from .uptodown.Uptodown import Uptodown
 from .misterAladin.MisterAladin import MisterAladin
 from .indeed.Indeed import Indeed
 from .fourShared.FourShared import FourShared
+from .download.Download import Download

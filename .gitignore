@@ -123,6 +123,7 @@ celerybeat.pid
 .env
 .venv
 components
+database
 private
 logs
 data

@@ -31,3 +31,8 @@ class Runtime:
        @staticmethod
        def end(start: float, end: float) -> float:
               logger.info(f'[ {style("SUCCESS", fg="red")} ] :: {style(f"time", fg="magenta")}: [ {end - start} ]')
+
+       @staticmethod
+       def sql_domain(domain: str, path: str) -> None:
+              logger.info(f'[ {style("SQL", fg="bright_green")} ] :: {style(f"NEW DOMAIN", fg="magenta")}: [ {domain} ] | {style(f"PATH", fg="magenta")}: [ {path} ]')
+              ...

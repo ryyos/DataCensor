@@ -10,3 +10,10 @@ class Down:
             f.write(response.content)
 
         return response
+    
+    @staticmethod
+    def curlv2(path: str, response: Response) -> Response:
+        with open(path, 'wb') as f:
+            f.write(response.content)
+
+    

@@ -3,14 +3,7 @@ import click
 from time import perf_counter
 from utils import Runtime
 
-from services import Softonic
-from services import AppsApk
-from services import Gofood
-from services import Uptodown
-from services import MisterAladin
-from services import Indeed
-from services import FourShared
-
+from services import *
 from share import Share
 
 class Main:
@@ -23,7 +16,6 @@ class Main:
     @staticmethod
     def reviews(): ...
 
-
     @task.group('admiralty')
     @staticmethod
     def admiralty(): ...
@@ -31,6 +23,10 @@ class Main:
     @task.group('shared')
     @staticmethod
     def shared():... 
+
+    @task.group('download')
+    @staticmethod
+    def download():... 
 
     """ <----------------------[ REVIEWS ]-------------------------->"""
 
@@ -91,8 +87,8 @@ class Main:
     @click.option('--url', '-u', required=True, type=str)
     @click.option('--type', '-t', required=True, type=str)
     def fourShared(s3: bool, save: bool, thread: bool, url: str, type: str):
-
         start = perf_counter()
+
         sof = FourShared(save=save, s3=s3, thread=thread, url=url, type=type)
         sof.main()
 
@@ -112,6 +108,23 @@ class Main:
         four.main(source=source, change_path=change, new_path=new_path, start_main_path=start_path)
 
         Runtime.end(start, perf_counter())
+
+    """ <----------------------[ INSTAN DOWNLOAD ]-------------------------->"""
+
+    @download.command('down')
+    @click.option('--url', '-u', required=True, type=str)
+    @click.option('--domain', '-d', required=True, type=str)
+    @click.option('--path', '-p', required=False, type=str, default=None)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    def down(url: str, domain: str, s3:bool, save: bool, path: str) -> None:
+        start = perf_counter()
+
+        down = Download(save=save, s3=s3)
+        down.main(url=url, domain=domain, path=path)
+
+        Runtime.end(start, perf_counter())
+        ...
 
 
 

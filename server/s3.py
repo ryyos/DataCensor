@@ -24,11 +24,10 @@ class ConnectionS3:
 
     def upload(self, key: str, body: dict, bucket: str) -> int:
         response: dict = self.__s3.put_object(Bucket=bucket, Key=key, Body=dumps(body, indent=2, ensure_ascii=False))
-        self.__s3
         
         Runtime.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
         return response['ResponseMetadata']['HTTPStatusCode']
-        # return 400
+
     
     def upload_file(self, path: str, bucket: str, key: str) -> int:
         response: dict = self.__s3.put_object(
@@ -39,6 +38,13 @@ class ConnectionS3:
         Runtime.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
         return response['ResponseMetadata']['HTTPStatusCode']
         ...
+
+    def upload_byte(self, body: str, bucket: str, key: str) -> int:
+        response: dict = self.__s3.put_object(
+                                Bucket=bucket,
+                                Key = key, 
+                                Body = body
+                            )
     
 
 
