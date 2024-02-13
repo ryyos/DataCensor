@@ -8,6 +8,7 @@ from icecream import ic
 from server.s3 import ConnectionS3
 from ApiRetrys import ApiRetry
 from database import SQL
+from database import SQLlite
 from utils import *
 
 class DownloadLibs:
@@ -15,14 +16,14 @@ class DownloadLibs:
         load_dotenv()
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True)
-        self.sql = SQL()
+        self.sqlite = SQLlite()
 
         self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
                                  secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
                                  endpoint_url=os.getenv('ENDPOINT'),
                                  )
         
-        self.cursor = self.sql.connection.cursor()
+        self.cursor = self.sqlite.connection.cursor()
 
         self.bucket = os.getenv('BUCKET')
         self.S3_PATH = "s3://ai-pipeline-statistics/"
@@ -53,14 +54,14 @@ class DownloadLibs:
 
             if not path: raise Exception('path not found, please insert path')
             self.cursor.execute(query_add)
-            self.sql.connection.commit()
-            self.sql.connection.close()
+            self.sqlite.connection.commit()
+            self.sqlite.connection.close()
 
             Runtime.sql_domain(domain, path)
             return path
 
         
-        self.sql.connection.close()
+        self.sqlite.connection.close()
         return path_in_database
         ...
 
