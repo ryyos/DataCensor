@@ -25,7 +25,15 @@ class JihadimalmoLibs(JihadimalmoComponent):
             ...
         ...
 
-    def collect_months(self, url: str) -> Generator[str, any, None]:
+    def collect_months(self, url: str, nth: int) -> Generator[str, any, None]:
         response: Response = self.api.get(url)
         html = PyQuery(response.text)
+
+        for side in html.find(f'#BlogArchive1_ArchiveList > ul:nth-child({nth}) > li > ul > li > a.post-count-link'):
+            
+            month: str = PyQuery(side).text()
+            url: str = PyQuery(side).attr('href')
+
+            yield (month, url)
+            ...
         ...

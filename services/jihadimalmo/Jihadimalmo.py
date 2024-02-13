@@ -18,8 +18,11 @@ class Jihadimalmo(JihadimalmoLibs):
         response: Response = self.api.get(self.main_url)
         html = PyQuery(response.text)
 
-        for year, url in self.collect_years(html):
-            
+        for nth, (year, url) in enumerate(self.collect_years(html)):
+
+            self.collect_months(url=url, nth=nth+1)
+            break
+
             ...
 
         ...
