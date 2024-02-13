@@ -8,6 +8,7 @@ from library import FourSharedLibs
 from concurrent.futures import wait
 from time import sleep
 from typing import List
+from icecream import ic
 
 from dekimashita import Dekimashita
 from utils import *
@@ -53,7 +54,7 @@ class FourShared(FourSharedLibs):
         except Exception: ...
 
         headers = {
-            "link": self.link,
+            "link": url,
             "domain": self.domain,
             "tag": [PyQuery(tag).text() for tag in html.find('#tagsDiv a')] + [self.domain],
             "crawling_time": now(),
@@ -66,19 +67,19 @@ class FourShared(FourSharedLibs):
                 "owner": html.find('a.fileOwner').text(),
                 "size": size,
                 "posted": posted,
-                "type": types,
+                "type": types.replace(' ', ''),
                 "description": html.find('#fileDescriptionText').text()
             },
         }
 
-        if self.type_process != 'one':
+        if self.type_process == 'one':
             headers.update({
                 "documents": name_documents
             })
 
         if self.SAVE_TO_LOKAL:
             headers = self.download(html=html, header=headers)
-            File.write_json(path, headers)
+            File.write_json(path, Dekimashita.vdict(headers, '\n'))
 
         if not item and self.type_process == 'one':
 
@@ -96,28 +97,34 @@ class FourShared(FourSharedLibs):
             wait(task_executors)
 
 
-    def paged(self) -> None:
+    def paged(self, url: str) -> None:
 
         while True:
-            response: Response = self.api.get(url=self.link, headers=self.headers, max_retries=30)
+            response: Response = self.api.get(url=url, headers=self.headers, max_retries=30)
             html = PyQuery(response.text)
 
             task_executors = []
             for card in self.collect_card(html):
-                component = (card, 0)
 
-                if self.USING_THREADS:
-                    task_executors.append(self.executor.submit(self.extract, component))
+                if '/folder/' in card:
+                    ic(card)
+                    self.paged(card)
 
-                else: 
-                    self.extract(component)
+                else:
+                    component = (card, 0)
+
+                    if self.USING_THREADS:
+                        task_executors.append(self.executor.submit(self.extract, component))
+
+                    else: 
+                        self.extract(component)
 
                 ...
 
             wait(task_executors)
 
-            if not self.link: break
-            self.link: str = self.main_url+html.find('a.pagerNext').attr('href')
+            if not html.find('a.pagerNext').attr('href'): break
+            url: str = self.main_url+html.find('a.pagerNext').attr('href')
 
         ...
         
@@ -130,7 +137,7 @@ class FourShared(FourSharedLibs):
                 ...
 
             case 'page':
-                self.paged()
+                self.paged(url=self.link)
                 ...
         ...
 

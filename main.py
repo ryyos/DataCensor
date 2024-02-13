@@ -91,19 +91,27 @@ class Main:
     @click.option('--url', '-u', required=True, type=str)
     @click.option('--type', '-t', required=True, type=str)
     def fourShared(s3: bool, save: bool, thread: bool, url: str, type: str):
-        start = perf_counter()
 
+        start = perf_counter()
         sof = FourShared(save=save, s3=s3, thread=thread, url=url, type=type)
         sof.main()
 
         Runtime.end(start, perf_counter())
 
-    """ <----------------------[ ADMIRALTY ]-------------------------->"""
+    """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
-    @task.command('4shared')
-    def fourShared():
+    @shared.command('share')
+    @click.option('--source', '-sc', required=True, type=str)
+    @click.option('--change', '-c',  is_flag=True, default=False)
+    @click.option('--new_path', '-np', required=False, type=str)
+    @click.option('--start_path', '-st', required=False, type=str)
+    def share(source: str, new_path: str, change: bool, start_path: int):
+        start = perf_counter()
+
         four = Share()
-        four.main()
+        four.main(source=source, change_path=change, new_path=new_path, start_main_path=start_path)
+
+        Runtime.end(start, perf_counter())
 
 
 

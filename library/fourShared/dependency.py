@@ -9,6 +9,7 @@ from pyquery import PyQuery
 from concurrent.futures import ThreadPoolExecutor
 from dekimashita import Dekimashita
 from browser import SyncPlaywright, BrowserContext, Page
+from icecream import ic
 
 from components import FourSharedAsset
 from utils import *
@@ -63,7 +64,7 @@ class FourSharedLibs(FourSharedAsset):
 
     def create_dir(self, format: str, folder: str) -> str:
         # s3://ai-pipeline-statistics/data/data_raw/admiralty/data_radikalisme/
-        path = f'data/data_raw/admiralty/data_radikalisme/{folder}/{format}'
+        path = f'data/data_raw/admiralty/data_radikalisme/4shared/{folder}/{format}'
         try:
             if self.SAVE_TO_LOKAL: os.makedirs(path)
         except Exception: ...
@@ -89,6 +90,7 @@ class FourSharedLibs(FourSharedAsset):
         url: str = html.find('#btnLink').attr('href')
         folder: str = html.find('a[class="gaClick hideLong"]').text()
 
+        ic(url)
         if not url:
             url = html.find('input[class="jsDLink"]').attr('value')
         
@@ -96,6 +98,8 @@ class FourSharedLibs(FourSharedAsset):
             folder: str = self.temp_path
 
         self.temp_path = folder
+
+        ic(folder)
 
         response = self.api.get(url)
         html = PyQuery(response.text)
