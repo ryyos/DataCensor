@@ -1,1 +1,1 @@
-from .shared import Share
+from .sharedV2 import ShareV2

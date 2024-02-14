@@ -4,7 +4,7 @@ from time import perf_counter
 from utils import Runtime
 
 from services import *
-from share import Share
+from share import ShareV2
 
 class Main:
 
@@ -108,7 +108,7 @@ class Main:
 
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
-    @shared.command('share')
+    @shared.command('sharev2')
     @click.option('--source', '-sc', required=True, type=str)
     @click.option('--change', '-c',  is_flag=True, default=False)
     @click.option('--new_path', '-np', required=False, type=str)
@@ -116,7 +116,7 @@ class Main:
     def share(source: str, new_path: str, change: bool, start_path: int):
         start = perf_counter()
 
-        four = Share()
+        four = ShareV2()
         four.main(source=source, change_path=change, new_path=new_path, start_main_path=start_path)
 
         Runtime.end(start, perf_counter())

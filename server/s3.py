@@ -39,7 +39,7 @@ class ConnectionS3:
         return response['ResponseMetadata']['HTTPStatusCode']
         ...
 
-    def upload_byte(self, body: str, bucket: str, key: str) -> int:
+    def upload_byte(self, body: any, bucket: str, key: str) -> int:
         response: dict = self.__s3.put_object(
                                 Bucket=bucket,
                                 Key = key, 

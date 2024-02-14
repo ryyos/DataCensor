@@ -25,3 +25,6 @@ def change_format(dates: str) -> str:
 
 def epoch():
     return int(time())
+
+def epoch_ms():
+    return str(round(time() * 1000))

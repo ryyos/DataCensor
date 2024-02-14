@@ -8,7 +8,7 @@ from typing import Tuple
 from dotenv import load_dotenv
 from utils import *
 
-class Share:
+class ShareV2:
     def __init__(self) -> None:
         load_dotenv()
 
