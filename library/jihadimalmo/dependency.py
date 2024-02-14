@@ -30,10 +30,13 @@ class JihadimalmoLibs(JihadimalmoComponent):
         ...
 
     def correct(self, url: str) -> str:
-        if 'https:' not in url:
-            return 'https:'+url
-        
-        return url
+
+        try:
+            if 'https:' not in url:
+                return 'https:'+url
+            return url
+        except Exception: 
+            return url
         ...
 
     def collect_years(self, html: PyQuery) -> Generator[str, any, None]:

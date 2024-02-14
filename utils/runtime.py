@@ -34,5 +34,11 @@ class Runtime:
 
        @staticmethod
        def sql_domain(domain: str, path: str) -> None:
-              logger.info(f'[ {style("SQL", fg="bright_green")} ] :: {style(f"NEW DOMAIN", fg="magenta")}: [ {domain} ] | {style(f"PATH", fg="magenta")}: [ {path} ]')
+              logger.info(f'[ {style("SQL", fg="bright_green")} ] :: {style(f"NEW DOMAIN", fg="bright_blue")}: [ {domain} ] | {style(f"PATH", fg="magenta")}: [ {path} ]')
+              ...
+
+       @staticmethod
+       def share(path: str) -> None:
+              logger.info(f'[ {style("SHARE", fg="bright_green")} ] :: {style(f"SOURCE", fg="bright_blue")}: [ {path} ]')
+              logger.info(f'[ {style("SHARE", fg="bright_green")} ] :: {style(f"DESTINATION", fg="bright_blue")}: [ {path} ]')
               ...

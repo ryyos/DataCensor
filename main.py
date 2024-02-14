@@ -4,7 +4,7 @@ from time import perf_counter
 from utils import Runtime
 
 from services import *
-from share import ShareV2
+from share import *
 
 class Main:
 
@@ -113,11 +113,21 @@ class Main:
     @click.option('--change', '-c',  is_flag=True, default=False)
     @click.option('--new_path', '-np', required=False, type=str)
     @click.option('--start_path', '-st', required=False, type=str)
-    def share(source: str, new_path: str, change: bool, start_path: int):
+    def sharev2(source: str, new_path: str, change: bool, start_path: int):
         start = perf_counter()
 
-        four = ShareV2()
-        four.main(source=source, change_path=change, new_path=new_path, start_main_path=start_path)
+        share = ShareV2()
+        share.main(source=source, change_path=change, new_path=new_path, start_main_path=start_path)
+
+        Runtime.end(start, perf_counter())
+
+    @shared.command('share')
+    @click.option('--source', '-sc', required=True, type=str)
+    def share(source: str):
+        start = perf_counter()
+
+        share = Share(base_path=source)
+        share.main()
 
         Runtime.end(start, perf_counter())
 
