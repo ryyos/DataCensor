@@ -1,12 +1,13 @@
-from database import SQL
+from math import *
 
-sql = SQL()
+rad = 6371
 
-cursor = sql.connection.cursor()
+ϕ1, λ1 = radians(59.9), radians(10.8)
+ϕ2, λ2 = radians(49.3), radians(-123.1)
 
-query = f'SELECT path from path WHERE domain="archive";'
-cursor.execute(query)
-
-path = cursor.fetchone()
-
-print(path[0])
+2 * rad * asin(
+    sqrt(
+        (ϕ_hav := sin((ϕ2 - ϕ1) / 2) ** 2)
+        + cos(ϕ1) * cos(ϕ2) * sin((λ2 - λ1) / 2) ** 2
+    )
+)

@@ -126,10 +126,12 @@ class Main:
     @admiralty.command('trop')
     @click.option('--stream', '-st',  is_flag=True, default=False)
     @click.option('--all', '-a',  is_flag=True, default=False)
-    def theReligionOfPeace(stream: bool, all: bool):
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    @click.option('--path', '-p', required=False, type=str, default=None)
+    def theReligionOfPeace(stream: bool, all: bool, save: bool, path: str):
         start = perf_counter()
 
-        trop = TheReligionOfPeace(stream=stream, all=all)
+        trop = TheReligionOfPeace(stream=stream, all=all, path=path, save=save)
         trop.main()
 
         Runtime.end(start, perf_counter())
