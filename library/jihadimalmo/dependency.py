@@ -18,7 +18,6 @@ class JihadimalmoLibs(JihadimalmoComponent):
         super().__init__()
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True)
-
         self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
                                  secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
                                  endpoint_url=os.getenv('ENDPOINT'),
@@ -32,8 +31,10 @@ class JihadimalmoLibs(JihadimalmoComponent):
     def correct(self, url: str) -> str:
 
         try:
-            if 'https:' not in url:
+            if url.startswith('//'):
                 return 'https:'+url
+            elif url.startswith('/'):
+                return 'https:/'+url
             return url
         except Exception: 
             return url
@@ -83,7 +84,7 @@ class JihadimalmoLibs(JihadimalmoComponent):
             "title": html.find('h3[class="post-title entry-title"]').text(),
             "posted": html.find('h2[class="date-header"]').text(),
             "aticle": Dekimashita.vdict(html.find('div[itemprop="description articleBody"]').text(), chars=['\n']),
-            "media": [self.correct(PyQuery(img).attr('src')) for img in html.find('div[itemprop="blogPost"] img')[:1]],
+            "media": [self.correct(PyQuery(img).attr('src')) for img in html.find('div[itemprop="blogPost"] img')[:-1]],
             "populer": [
                 {
                     "url": PyQuery(blog).find('div[class="item-title"] a').attr('href'),
@@ -92,7 +93,7 @@ class JihadimalmoLibs(JihadimalmoComponent):
                     "description": PyQuery(blog).find('div[class="item-snippet"]').text()
                 } for blog in html.find('div.popular-posts')
             ],
-            "urls": [PyQuery(url).attr('href') for url in html.find('div[class="widget LinkList"] a')]
+            "urls": [self.correct(PyQuery(url).attr('href')) for url in html.find('div[class="widget LinkList"] a')]
         }
 
         return detail
@@ -101,12 +102,16 @@ class JihadimalmoLibs(JihadimalmoComponent):
     def downloader(self, headers: dict, **kwargs) -> Dict[str, any]:
 
         try:
-            ic(headers["article"]["media"])
             for url in headers["article"]["media"]:
+                if not url: continue
                 
                 response: Response = self.api.get(url)
                 extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '')
 
+                if extension == 'html':
+                    headers["article"]["media"].remove(url)
+                    continue
+                    
                 temp_path: str = f'{self.path+kwargs["year"]}/{kwargs["month"]}/{extension}'
                 path_media: str = f'{create_dir(paths=temp_path, create=self.SAVE_TO_LOKAL)}/{epoch_ms()}.{extension}'
 

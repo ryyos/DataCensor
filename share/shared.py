@@ -25,7 +25,7 @@ class Share:
     def main(self):
         for root, dirs, files in os.walk(self.base_path):
             for file in files:
-                file_path = os.path.join(root, file)
+                file_path = os.path.join(root, file).replace('\\', '/')
                 
                 Runtime.share(file_path)
 
