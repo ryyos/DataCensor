@@ -8,30 +8,37 @@ from pyquery import PyQuery
 from fake_useragent import FakeUserAgent
 from icecream import ic
 from typing import List
-from components import codes
+from dotenv import load_dotenv
+
+from components import codes, UptodowndComponent
+from server.s3 import ConnectionS3
 from utils import *
 
-class UptodownLibs:
+class UptodownLibs(UptodowndComponent):
     def __init__(self) -> None:
+        super().__init__()
+        load_dotenv()
 
-        self.api = ApiRetry(show_logs=True, handle_forbidden=True, redirect_url='https://id.uptodown.com/')
+        self.bucket = os.getenv('BUCKET')
+        
         self.faker = FakeUserAgent()
         self.parser = Parser()
 
-        self.__DOMAIN = 'id.uptodown.com'
+        self.api = ApiRetry(
+            show_logs=True, 
+            handle_forbidden=True, 
+            redirect_url='https://id.uptodown.com/')
+        
+        self.logs = Logs(
+            path_monitoring='logs/uptodown/monitoring_data.json',
+            path_log='logs/uptodown/monitoring_logs.json',
+            domain='id.uptodown.com')
 
-        self.headers = {
-            'accept': '*/*',
-            'accept-language': 'en-US,en;q=0.9,id;q=0.8',
-            # 'cookie': 'utd_red_lang=menu',
-            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        }
+        self.s3 = ConnectionS3(
+            access_key_id=os.getenv('ACCESS_KEY_ID'),
+            secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
+            endpoint_url=os.getenv('ENDPOINT'))
+
 
         ...
 
@@ -51,7 +58,7 @@ class UptodownLibs:
 
     def selection_app(self, app: str) -> bool:
         pieces = PyQuery(app).attr('href').split('/')
-        if self.__DOMAIN in pieces: return False
+        if self.DOMAIN in pieces: return False
         else: return True
         ...
 

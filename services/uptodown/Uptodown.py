@@ -6,40 +6,26 @@ from time import time, sleep
 from pyquery import PyQuery
 from typing import List
 from icecream import ic
-from dotenv import load_dotenv
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, wait
-from server.s3 import ConnectionS3
 from dekimashita import Dekimashita
 
 from utils import *
 
-class Uptodown:
-    def __init__(self) -> None:
-        load_dotenv()
-        self.__platforms = ['android', 'windows', 'mac']
-
-        self.__MAIN_URL = 'https://id.uptodown.com/'
-        self.__DOMAIN = 'id.uptodown.com'
-
-        self.parser = Parser()
-        self.__uptodown = UptodownLibs()
+class Uptodown(UptodownLibs):
+    def __init__(self, s3: bool, save: bool, thread: bool) -> None:
+        super().__init__()
         self.__executor = ThreadPoolExecutor(max_workers=5)
 
-        self.__logs = Logs(path_monitoring='logs/uptodown/monitoring_data.json',
-                            path_log='logs/uptodown/monitoring_logs.json',
-                            domain='id.uptodown.com')
-
-        self.__bucket = os.getenv('BUCKET')
-        self.__s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
-                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
-                                 endpoint_url=os.getenv('ENDPOINT'),
-                                 )
+        
+        self.SAVE_TO_S3 = s3
+        self.SAVE_TO_LOKAL = save
+        self.USING_THREADS = thread
         ...
 
     def extract_review(self, header: dict) -> None:
-        url_app = self.__uptodown.selection_url(header["link"])
-        response = self.__uptodown.api.get(f'{url_app}/mng/v2/app/{header["id"]}/comments', headers=self.__uptodown.headers)
+        url_app = self.selection_url(header["link"])
+        response = self.api.get(f'{url_app}/mng/v2/app/{header["id"]}/comments', headers=self.headers)
 
         reviews = PyQuery(response.json()['content'])
 
@@ -48,9 +34,9 @@ class Uptodown:
         for review in reviews.find('div.comment'):
             temp = {
                 "id_review": int(PyQuery(review).attr('id')),
-                "username_reviews": self.__uptodown.strip(self.parser.ex(review, 'span.user').text()),
+                "username_reviews": self.strip(self.parser.ex(review, 'span.user').text()),
                 "image_reviews": PyQuery(self.parser.ex(review, 'img')[0]).attr('src'),
-                "created_time": self.__uptodown.strip(self.parser.ex(review, 'span:nth-child(3)').text()),
+                "created_time": self.strip(self.parser.ex(review, 'span:nth-child(3)').text()),
                 "created_time_epoch": None,
                 "email_reviews": None,
                 "company_name": None,
@@ -64,18 +50,18 @@ class Uptodown:
                     }
                 ],
                 "content_reviews": self.parser.ex(review, 'p').text(),
-                "total_likes_reviews": self.__uptodown.handler(self.parser, review, 'div[name="favs-icon"] span', 'Like'),
+                "total_likes_reviews": self.handler(self.parser, review, 'div[name="favs-icon"] span', 'Like'),
                 "total_dislikes_reviews": None,
-                "total_reply_reviews":  self.__uptodown.handler(self.parser, review, 'div[name="response-icon"] span', 'Balas'),
+                "total_reply_reviews":  self.handler(self.parser, review, 'div[name="response-icon"] span', 'Balas'),
                 "reply_content_reviews": [],
                 "date_of_experience": None,
                 "date_of_experience_epoch": None
             }
 
-            if temp["total_reply_reviews"]: temp["reply_content_reviews"] = self.__uptodown.get_reply(url_app=header["link"], id=temp["id_review"])
+            if temp["total_reply_reviews"]: temp["reply_content_reviews"] = self.get_reply(url_app=header["link"], id=temp["id_review"])
             all_reviews.append(temp)
         
-        reviews = self.__uptodown.get_next_review(url_app, header["id"])
+        reviews = self.get_next_review(url_app, header["id"])
 
         for review in reviews["all_reviews"]:
             temp = {
@@ -104,14 +90,14 @@ class Uptodown:
                 "date_of_experience_epoch": None
             }
 
-            if temp["total_reply_reviews"]: temp["reply_content_reviews"] = self.__uptodown.get_reply(url_app=header["link"], id=temp["id_review"])
+            if temp["total_reply_reviews"]: temp["reply_content_reviews"] = self.get_reply(url_app=header["link"], id=temp["id_review"])
             all_reviews.append(temp)
 
         total_error = 0
         ic(len(all_reviews))
         for index, review in tqdm(enumerate(all_reviews), smoothing=0.1, total=len(all_reviews)):
 
-            path = f'{self.__uptodown.create_dir(header, header)}/{Dekimashita.vdir(review["username_reviews"].lower())}.json'
+            path = f'{self.create_dir(header, header)}/{Dekimashita.vdir(review["username_reviews"].lower())}.json'
 
             header.update({
                 "detail_reviews": review,
@@ -119,16 +105,17 @@ class Uptodown:
                 "path_data_clean": 'S3://ai-pipeline-statistics/'+convert_path(path)
             })
 
-            response = self.__s3.upload(key=path,
-                                        body=header,
-                                        bucket=self.__bucket)
+            if self.SAVE_TO_S3:
+                response = self.s3.upload(key=path,
+                                            body=header,
+                                            bucket=self.bucket)
+                
+            else: response = 200
 
-            # response = 200
-            # if index in [2,5,6,4,9,6,11,12]: response = 404
-
-            # File.write_json(path, header)
+            if self.SAVE_TO_LOKAL:
+                File.write_json(path, header)
             
-            error: int = self.__logs.logsS3(func=self.__logs,
+            error: int = self.logs.logsS3(func=self.logs,
                                header=header,
                                index=index,
                                response=response,
@@ -140,20 +127,20 @@ class Uptodown:
             reviews["error"].clear()
 
         if not all_reviews:
-            self.__logs.zero(func=self.__logs,
+            self.logs.zero(func=self.logs,
                              header=header)
         
         ...
 
     
     def extract_detail(self, component: dict) -> None:
-        response: Response = self.__uptodown.api.get(url=component["app"], headers=self.__uptodown.headers)
+        response: Response = self.api.get(url=component["app"], headers=self.headers)
         html = PyQuery(response.text)
 
         header = {
             "id": html.find('#detail-app-name').attr('code'),
             "link": component["app"],
-            "domain": self.__DOMAIN,
+            "domain": self.DOMAIN,
             "crawling_time": now(),
             "crawling_time_epoch": int(time()),
             "path_data_raw": "",
@@ -161,9 +148,9 @@ class Uptodown:
             "reviews_name": html.find('#detail-app-name').text(),
             "location_reviews": None,
             "category_reviews": "application",
-            "total_reviews": self.__uptodown.filter_total_review(html.find('#more-comments-rate-section').text()),
+            "total_reviews": self.filter_total_review(html.find('#more-comments-rate-section').text()),
             "reviews_rating": {
-              "total_rating": self.__uptodown.filter_rating(html.find('#rating').text()),
+              "total_rating": self.filter_rating(html.find('#rating').text()),
               "detail_total_rating": [
                 {
                   "score_rating": None,
@@ -194,29 +181,31 @@ class Uptodown:
             ]
         }
 
-        path_detail = f'{self.__uptodown.create_dir(header, component)}/detail/{Dekimashita.vdir(header["reviews_name"].lower())}.json'
+        path_detail = f'{self.create_dir(header, component)}/detail/{Dekimashita.vdir(header["reviews_name"].lower())}.json'
 
         header.update({
             "path_data_raw": 'S3://ai-pipeline-statistics/'+path_detail,
             "path_data_clean": 'S3://ai-pipeline-statistics/+'+convert_path(path_detail)
         })
 
-        self.__s3.upload(key=path_detail,
-                         body=header,
-                         bucket=self.__bucket)
+        if self.SAVE_TO_S3:
+            self.s3.upload(key=path_detail,
+                            body=header,
+                            bucket=self.bucket)
 
-        # File.write_json(path=path_detail, content=header)
+        if self.SAVE_TO_LOKAL:
+            File.write_json(path=path_detail, content=header)
 
         self.extract_review(header)
         ...
 
 
     def main(self) -> None:
-        for platform in self.__platforms:
-            types: List[str] = self.__uptodown.collect_types(self.__MAIN_URL+platform)
+        for platform in self.platforms:
+            types: List[str] = self.collect_types(self.MAIN_URL+platform)
 
             for type in types:
-                apps: List[str] = self.__uptodown.collect_apps(type)
+                apps: List[str] = self.collect_apps(type)
                 
                 task_executor = []
                 for app in apps:
@@ -227,8 +216,10 @@ class Uptodown:
                         "app": app
                     }
 
-                    # self.extract_detail(component)
-                    task_executor.append(self.__executor.submit(self.extract_detail, component))
+                    if self.USING_THREADS:
+                        task_executor.append(self.__executor.submit(self.extract_detail, component))
+                    else:
+                        self.extract_detail(component)
                 wait(task_executor)
         
         self.__executor.shutdown(wait=True)

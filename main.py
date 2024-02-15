@@ -35,8 +35,12 @@ class Main:
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
     def gofood(s3: bool, save: bool, thread: bool):
+        start = perf_counter()
+
         sof = Gofood(save=save, s3=s3, thread=thread)
         sof.main()
+
+        Runtime.end(start, perf_counter())
 
 
     @reviews.command('softonic')
@@ -44,8 +48,12 @@ class Main:
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
     def softonic(s3: bool, save: bool, thread: bool):
+        start = perf_counter()
+
         sof = Softonic(save=save, s3=s3, thread=thread)
         sof.main()
+
+        Runtime.end(start, perf_counter())
 
 
     @reviews.command('appsapk')
@@ -53,14 +61,25 @@ class Main:
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
     def appsapk(s3: bool, save: bool, thread: bool):
+        start = perf_counter()
+
         sof = AppsApk(save=save, s3=s3, thread=thread)
         sof.main()
 
+        Runtime.end(start, perf_counter())
+
 
     @reviews.command('uptodown')
-    def uptodown():
-        sof = Uptodown()
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    def uptodown(s3: bool, save: bool, thread: bool):
+        start = perf_counter()
+
+        sof = Uptodown(save=save, s3=s3, thread=thread)
         sof.main()
+
+        Runtime.end(start, perf_counter())
 
 
     @reviews.command('mister_aladin')
@@ -68,14 +87,22 @@ class Main:
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
     def mister_aladin(s3: bool, save: bool, thread: bool):
+        start = perf_counter()
+
         sof = MisterAladin(save=save, s3=s3, thread=thread)
         sof.main()
+
+        Runtime.end(start, perf_counter())
 
 
     @reviews.command('indeed')
     def indeed():
+        start = perf_counter()
+
         ind = Indeed()
         ind.main()
+
+        Runtime.end(start, perf_counter())
 
 
     """ <----------------------[ ADMIRALTY ]-------------------------->"""
