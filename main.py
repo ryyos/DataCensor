@@ -94,17 +94,6 @@ class Main:
 
         Runtime.end(start, perf_counter())
 
-
-    @reviews.command('indeed')
-    def indeed():
-        start = perf_counter()
-
-        ind = Indeed()
-        ind.main()
-
-        Runtime.end(start, perf_counter())
-
-
     """ <----------------------[ ADMIRALTY ]-------------------------->"""
 
     @admiralty.command('4shared')
