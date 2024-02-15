@@ -7,3 +7,4 @@ from .indeed.dependency import IndeedLibs
 from .fourShared.dependency import FourSharedLibs
 from .download.dependency import DownloadLibs
 from .jihadimalmo.dependency import JihadimalmoLibs
+from .theReligionOfPeace.dependency import TheReligionOfPeaceLibs

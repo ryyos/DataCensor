@@ -7,3 +7,4 @@ from .indeed.Indeed import Indeed
 from .fourShared.FourShared import FourShared
 from .download.Download import Download
 from .jihadimalmo.Jihadimalmo import Jihadimalmo
+from .theReligionOfPeace.TheReligionOfPeace import TheReligionOfPeace

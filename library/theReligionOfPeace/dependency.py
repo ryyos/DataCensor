@@ -1,0 +1,6 @@
+from components import TheReligionOfPeaceComponent
+
+class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
+    def __init__(self) -> None:
+        ...
+    ...

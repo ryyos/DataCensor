@@ -122,6 +122,16 @@ class Main:
 
         Runtime.end(start, perf_counter())
 
+
+    @admiralty.command('trop')
+    def theReligionOfPeace():
+        start = perf_counter()
+
+        trop = TheReligionOfPeace()
+        trop.main()
+
+        Runtime.end(start, perf_counter())
+
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
     @shared.command('sharev2')
