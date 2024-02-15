@@ -10,4 +10,4 @@ class Kafka:
         ...
 
     def send(self, data: dict) -> None:
-                    self.__kafka_produser.send(topic=self.__topic, value=bytes(json.dumps(data.json()), 'utf-8'))
+        self.__kafka_produser.send(topic=self.__topic, value=bytes(json.dumps(data.json()), 'utf-8'))

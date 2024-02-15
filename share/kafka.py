@@ -2,24 +2,17 @@ import os
 import shutil
 
 from icecream import ic
-from typing import Dict
-from server.s3 import ConnectionS3
 
 from dotenv import load_dotenv
+from server.kafka import Kafka
 from utils import *
 
 class ShareKafka:
-    def __init__(self, base_path: str) -> None:
+    def __init__(self, base_path: str, topic: str, server: str) -> None:
         load_dotenv()
 
         self.base_path = base_path
-
-        self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
-                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
-                                 endpoint_url=os.getenv('ENDPOINT'),
-                                 )
-
-        self.bucket = os.getenv('BUCKET')
+        self.kafka = Kafka(topic=topic, server=server)
         ...
 
     def main(self):
@@ -29,8 +22,5 @@ class ShareKafka:
                 
                 Runtime.share(file_path)
 
-                self.s3.upload_file(
-                    path=file_path,
-                    bucket=self.bucket,
-                    key=file_path
-                )
+                data: dict = File.read_json(file_path)
+                self.kafka.send(data)

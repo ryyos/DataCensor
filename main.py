@@ -138,7 +138,7 @@ class Main:
 
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
-    @shared.command('sharev2')
+    @shared.command('s3v2')
     @click.option('--source', '-sc', required=True, type=str)
     @click.option('--change', '-c',  is_flag=True, default=False)
     @click.option('--new_path', '-np', required=False, type=str)
@@ -151,12 +151,24 @@ class Main:
 
         Runtime.end(start, perf_counter())
 
-    @shared.command('share')
+    @shared.command('s3')
     @click.option('--source', '-sc', required=True, type=str)
     def share(source: str):
         start = perf_counter()
 
         share = Share(base_path=source)
+        share.main()
+
+        Runtime.end(start, perf_counter())
+
+    @shared.command('kafka')
+    @click.option('--source', '-sc', required=True, type=str)
+    @click.option('--topic', '-t', required=True, type=str)
+    @click.option('--server', '-s', required=True, type=str)
+    def share(source: str, topic: str, server: str):
+        start = perf_counter()
+
+        share = ShareKafka(base_path=source, server=server, topic=topic)
         share.main()
 
         Runtime.end(start, perf_counter())
