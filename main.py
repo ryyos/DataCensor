@@ -124,14 +124,11 @@ class Main:
 
 
     @admiralty.command('trop')
-    @click.option('--stream', '-st',  is_flag=True, default=False)
     @click.option('--all', '-a',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    @click.option('--path', '-p', required=False, type=str, default=None)
-    def theReligionOfPeace(stream: bool, all: bool, save: bool, path: str):
+    def theReligionOfPeace(stream: bool, all: bool):
         start = perf_counter()
 
-        trop = TheReligionOfPeace(stream=stream, all=all, path=path, save=save)
+        trop = TheReligionOfPeace(all=all)
         trop.main()
 
         Runtime.end(start, perf_counter())
@@ -169,6 +166,18 @@ class Main:
         start = perf_counter()
 
         share = ShareKafka(base_path=source, server=server, topic=topic)
+        share.main()
+
+        Runtime.end(start, perf_counter())
+
+    @shared.command('trop')
+    @click.option('--source', '-sc', required=True, type=str)
+    @click.option('--topic', '-t', required=True, type=str)
+    @click.option('--server', '-s', required=True, type=str)
+    def share(source: str, topic: str, server: str):
+        start = perf_counter()
+
+        share = TheReligionOfPeaceShare(base_path=source, server=server, topic=topic)
         share.main()
 
         Runtime.end(start, perf_counter())

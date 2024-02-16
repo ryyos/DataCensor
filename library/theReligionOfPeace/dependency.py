@@ -1,3 +1,4 @@
+import json
 
 from typing import Generator, Tuple, List, Dict
 from icecream import ic
@@ -8,6 +9,8 @@ from ApiRetrys import ApiRetry
 from components import TheReligionOfPeaceComponent
 from dekimashita import Dekimashita
 
+from utils import *
+
 class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
     def __init__(self) -> None:
         super().__init__()
@@ -16,6 +19,7 @@ class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
             show_logs=True,
             defaulth_headers=True
         )
+
         ...
     ...
 
@@ -47,7 +51,47 @@ class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
             return None
         ...
 
-    def extract_table(self, html: PyQuery) -> List[Dict[str, any]]:
+    def read_database(self) -> Tuple[str]:
+        try:
+            exp = open('database/txt/theReligionOfPeace.txt', 'r').readline()
+            (stream, send) = eval(exp)
+
+        except Exception:
+            open('database/txt/theReligionOfPeace.txt', 'w').writelines(str([epoch(), epoch()]))
+
+        finally:
+            exp = open('database/txt/theReligionOfPeace.txt', 'r').readline()
+            (stream, send) = eval(exp)
+
+        return(stream, send)
+        ...
+
+    def update_database(self, stream_time: int = None, send_time: int = None) -> None:
+        exp = open('database/txt/theReligionOfPeace.txt', 'r').readline()
+        (stream, send) = eval(exp)
+
+        if stream_time:
+            open('database/txt/theReligionOfPeace.txt', 'w').writelines(str([stream_time, send]))
+        if send_time:
+            open('database/txt/theReligionOfPeace.txt', 'w').writelines(str([stream, send_time]))
+        ...
+
+    def stream_tables(self, tables: List[dict]) -> List[Dict[str, any]]:
+        (stream, send) = self.read_database()
+
+        new_datas: List[dict] = []
+        for table in tables:
+            dates: str = table["Date"].replace('.', '-')
+            dates: int = convert_time(dates)
+
+            if dates > int(stream):
+                new_datas.append(table)
+            
+        self.update_database(stream_time=convert_time(tables[0]["Date"].replace('.', '-')))
+        return new_datas
+        ...
+
+    def extract_table(self, html: PyQuery, stream: bool) -> List[Dict[str, any]]:
 
         table = html.find('table[cellpadding="3px"]')
         header = PyQuery(table).find('tr:first-child th')
@@ -57,6 +101,9 @@ class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
                 PyQuery(header[nth]).text() : self.to_int(PyQuery(row).text()) for nth, row in enumerate(PyQuery(column).find('td'))
             } for column in PyQuery(table).find('tr')[1:]
         ]
+
+        if stream:
+            return self.stream_tables(tables)
 
         return tables
         ...
@@ -80,5 +127,4 @@ class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
         ]
 
         return jihads
-
         ...

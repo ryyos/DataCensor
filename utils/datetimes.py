@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 def convert_time(times: str) -> int:
     dt = date.datetime.fromisoformat(times)
     dt = dt.replace(tzinfo=timezone.utc) 
-
     return int(dt.timestamp())
     ...
 

@@ -8,19 +8,17 @@ from dekimashita import Dekimashita
 from utils import *
 
 class TheReligionOfPeace(TheReligionOfPeaceLibs):
-    def __init__(self, stream: bool, all: bool, save: bool, path: str) -> None:
+    def __init__(self, all: bool) -> None:
         super().__init__()
 
-        self.stream: bool = stream
         self.all: bool = all
-
-        self.save: bool = save
-        self.path: str = path
         ...
 
-    def get_all(self, url: str, year: str) -> None:
+    def extract(self, url: str, year: str, stream: bool) -> None:
         response: Response = self.api.get(url=url, max_retries=30)
         html = PyQuery(response.text)
+
+        self.read_database()
 
         results = {
             "link": url,
@@ -34,26 +32,32 @@ class TheReligionOfPeace(TheReligionOfPeaceLibs):
             "url_media": [self.base_url+PyQuery(img).attr('src').replace('\\', '/') for img in html.find('table[class="quran-table"] img')],
             "descriptions": self.filter(html),
             "jihad_report": self.extract_jihad(html),
-            "table": self.extract_table(html)
+            "table": self.extract_table(html, stream=stream)
         }
 
-        if self.save:
-            if not self.path: raise FileNotFoundError
+        if stream:
+            path: str = self.path_stream+year
+            path: str = f'{create_dir(path)}/{epoch()}.json'
 
-            path: str = self.path+year
-            path: str = create_dir(path)
+        else:
+            path: str = self.path_all+year
+            path: str = f'{create_dir(path)}/{Dekimashita.vdir(results["title"])}.json'
 
-            ic(path)
+        if results["table"]:
+            File.write_json(path, results)
 
-            File.write_json(f'{path}/{Dekimashita.vdir(results["title"])}.json', results)
+        Runtime.found(
+            process='STREAM',
+            message='DATA FOUND',
+            total=len(results["table"])
+        )
         ...
+
 
     def main(self) -> None:
 
-        if self.all:
-            for year, url in self.collect_year(self.main_url):
-                self.get_all(url=url, year=year)
-            ...
-        ...
+        for year, url in self.collect_year(self.main_url):
+            self.extract(url=url, year=year, stream=bool(not self.all))
 
-#  data/kafka/admiralty/theReligionOfPeace/json/
+            if not self.all: break
+            ...
