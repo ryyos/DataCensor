@@ -4,6 +4,7 @@ from typing import Generator, Tuple, List, Dict
 from icecream import ic
 from requests import Response
 from pyquery import PyQuery
+from pathlib import Path
 
 from ApiRetrys import ApiRetry
 from components import TheReligionOfPeaceComponent
@@ -51,19 +52,29 @@ class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
             return None
         ...
 
-    def read_database(self) -> Tuple[str]:
-        try:
-            exp = open('database/txt/theReligionOfPeace.txt', 'r').readline()
-            (stream, send) = eval(exp)
+    def read_database(self) -> Tuple[str, str]:
+        path_database = Path('database/txt/theReligionOfPeace.txt')
 
-        except Exception:
-            open('database/txt/theReligionOfPeace.txt', 'w').writelines(str([epoch(), epoch()]))
+        if path_database.exists():
+            with open(path_database, 'r') as file:
+                data = file.read()
 
-        finally:
-            exp = open('database/txt/theReligionOfPeace.txt', 'r').readline()
-            (stream, send) = eval(exp)
+                if not data:
+                    data = [epoch(), epoch()]  # Default data
+                    with open(path_database, 'w') as default_file:
+                        json.dump(data, default_file)
 
-        return(stream, send)
+                else:
+                    data = json.loads(data)
+        else:
+            data = [epoch(), epoch()]  # Default data
+            with open(path_database, 'w') as file:
+                json.dump(data, file)
+
+
+        stream, send = data
+
+        return stream, send
         ...
 
     def update_database(self, stream_time: int = None, send_time: int = None) -> None:
@@ -77,7 +88,7 @@ class TheReligionOfPeaceLibs(TheReligionOfPeaceComponent):
         ...
 
     def stream_tables(self, tables: List[dict]) -> List[Dict[str, any]]:
-        (stream, send) = self.read_database()
+        (stream, _) = self.read_database()
 
         new_datas: List[dict] = []
         for table in tables:

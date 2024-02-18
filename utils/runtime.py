@@ -44,6 +44,11 @@ class Runtime:
               ...
 
        @staticmethod
+       def shareKafka(path: str) -> None:
+              logger.info(f'[ {style("SHARE", fg="bright_green")} ] :: {style(f"SOURCE", fg="bright_blue")}: [ {path} ]')
+              ...
+
+       @staticmethod
        def found(process: str, message: int, total: int) -> None:
-              logger.info(f'[ {style({process}, fg="bright_green")} ] :: {style(f"{message}", fg="bright_blue")}: [ {total} ]')
+              logger.info(f'[ {style(process, fg="bright_green")} ] :: {style(f"{message}", fg="bright_blue")}: [ {total} ]')
               ...

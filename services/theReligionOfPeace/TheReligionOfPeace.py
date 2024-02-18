@@ -18,8 +18,6 @@ class TheReligionOfPeace(TheReligionOfPeaceLibs):
         response: Response = self.api.get(url=url, max_retries=30)
         html = PyQuery(response.text)
 
-        self.read_database()
-
         results = {
             "link": url,
             "domain": self.domain,
