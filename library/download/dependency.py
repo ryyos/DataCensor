@@ -15,7 +15,7 @@ class DownloadLibs:
     def __init__(self, save: bool) -> None:
         load_dotenv()
 
-        self.api = ApiRetry(show_logs=True, defaulth_headers=True)
+        self.api = ApiRetry(show_logs=True, defaulth_headers=False)
         self.sqlite = SQLlite()
 
         self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
@@ -48,7 +48,7 @@ class DownloadLibs:
         self.cursor.execute(query_check)
 
         try:
-            path_in_database = self.cursor.fetchone()[0]
+            path_in_database: str = self.cursor.fetchone()[0]
 
         except Exception:
 
@@ -62,6 +62,9 @@ class DownloadLibs:
 
         
         self.sqlite.connection.close()
+
+        ic(path_in_database)
+        
         return path_in_database
         ...
 
@@ -75,6 +78,8 @@ class DownloadLibs:
             file_title = f'{file_title}.{format}'
 
         if base_path:
+            base_path: str = base_path.replace('\\', '/')
+            if not base_path.endswith('/'): base_path: str = base_path+'/'
             base_path = base_path+path_domain
         else:
             base_path = None

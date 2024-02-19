@@ -45,6 +45,7 @@ class ConnectionS3:
                                 Key = key, 
                                 Body = body
                             )
+        Runtime.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
     
 
 

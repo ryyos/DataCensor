@@ -35,13 +35,14 @@ class FourShared(FourSharedLibs):
         response: Response = self.api.get(url=url)
         html = PyQuery(response.text)
 
-        title: str = html.find('h1.fileName').text()
-        if not title:
-            title: str = html.find('div[class="generalFilename"]').text()
+        title: str = (html.find('h1.fileName').text() or
+                html.find('div[class="generalFilename"]').text() or
+                html.find('div.file-name').text())
 
-        folder: str = html.find('a[class="gaClick hideLong"]').text()
-        if not folder:
-            folder: str = self.temp_path
+
+        folder: str = (html.find('a[class="gaClick hideLong"]').text() or 
+                       self.temp_path or
+                       html.find('meta[property="og:title"]').attr('content').split(' ')[0])
 
         self.temp_path = folder
         path: str = f'{self.create_dir(format="json", folder=folder.lower())}/{title.split(".")[0].replace(" ", "_")}.json'
@@ -72,7 +73,7 @@ class FourShared(FourSharedLibs):
             },
         }
 
-        if self.type_process == 'one':
+        if self.type_process == 'one' and name_documents:
             headers.update({
                 "documents": name_documents
             })
@@ -81,7 +82,7 @@ class FourShared(FourSharedLibs):
             headers = self.download(html=html, header=headers)
             File.write_json(path, Dekimashita.vdict(headers, '\n'))
 
-        if not item and self.type_process == 'one':
+        if not item and name_documents and self.type_process == 'one':
 
             task_executors = []
             for index, url in enumerate(url_documents):

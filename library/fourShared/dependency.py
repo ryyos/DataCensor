@@ -52,11 +52,11 @@ class FourSharedLibs(FourSharedAsset):
     def extract_navbar(self, html: PyQuery) -> Tuple[str]:
         try:
             (size, posted, types, _) = html.find('p.fileInfo').text().split(' |')
-            return (' '.join(size.split(' ')[1:]), posted.strip(), types.strip())
+            return (size, posted.strip(), types.strip())
         
         except Exception:
-            size = html.find('div.id3tag:nth-child(2)').text()
-            posted = html.find('div[class="generalUsername clearFix"] > span').text()
+            size = (html.find('div.id3tag:nth-child(2)').text() or html.find('span[class="jsFileSize"]').text())
+            posted = (html.find('div[class="generalUsername clearFix"] > span').text() or html.find('span[class="jsUploadTime"]')).text()
             types = html.find('div.id3tag:first-child').text()
 
             return (' '.join(size.split(' ')[1:]).strip(), posted.strip(), ' '.join(types.split(' ')[-1]).strip())

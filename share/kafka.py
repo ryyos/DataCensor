@@ -19,9 +19,11 @@ class ShareKafka:
 
         for root, dirs, files in os.walk(self.base_path):
             for file in files:
-                file_path = os.path.join(root, file).replace('\\', '/')
-                
-                Runtime.shareKafka(file_path)
 
-                data: dict = File.read_json(file_path)
-                self.kafka.send(data)
+                if file.endswith('json'):
+                    file_path = os.path.join(root, file).replace('\\', '/')
+                    
+                    Runtime.shareKafka(file_path)
+
+                    data: dict = File.read_json(file_path)
+                    self.kafka.send(data)

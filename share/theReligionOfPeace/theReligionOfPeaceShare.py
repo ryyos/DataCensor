@@ -8,6 +8,7 @@ from library import TheReligionOfPeaceLibs
 from server.kafkaa import Kafkaa
 from utils import *
 
+# Stable
 class TheReligionOfPeaceShare(TheReligionOfPeaceLibs):
     def __init__(self, base_path: str, topic: str) -> None:
         super().__init__()

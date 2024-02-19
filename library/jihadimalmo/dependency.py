@@ -16,6 +16,7 @@ from utils import *
 class JihadimalmoLibs(JihadimalmoComponent):
     def __init__(self, save: bool, s3: bool) -> None:
         super().__init__()
+        load_dotenv()
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True)
         self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),

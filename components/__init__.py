@@ -7,3 +7,4 @@ from .misteraladin.component import MisterAladinComponent
 from .jihadimalmo.component import JihadimalmoComponent
 from .uptodown.component import UptodowndComponent
 from .theReligionOfPeace.component import TheReligionOfPeaceComponent
+from .archive.component import ArchiveComponent

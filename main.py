@@ -133,6 +133,20 @@ class Main:
 
         Runtime.end(start, perf_counter())
 
+
+    @admiralty.command('archive')
+    @click.option('--url', '-u', required=True, type=str)
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    @click.option('--type', '-t', required=True, type=str)
+    def archive(url: str, s3: bool, save: bool, type: str):
+        start = perf_counter()
+
+        arch = Archive(url=url, s3=s3, save=save, types=type)
+        arch.main()
+
+        Runtime.end(start, perf_counter())
+
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
     @shared.command('s3v2')
