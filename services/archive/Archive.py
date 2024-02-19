@@ -8,10 +8,8 @@ from library import ArchiveLibs
 from utils import *
 
 class Archive(ArchiveLibs):
-    def __init__(self, url: str, s3: bool, save: bool, types: str) -> None:
-        super().__init__(save, s3)
-
-        self.executor = ThreadPoolExecutor()
+    def __init__(self, url: str, s3: bool, save: bool, types: str, threads: bool) -> None:
+        super().__init__(save, s3, threads)
 
         self.SAVE_TO_S3: bool = s3
         self.SAVE_TO_LOKAL: bool = save

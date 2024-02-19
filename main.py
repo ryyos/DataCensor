@@ -136,13 +136,14 @@ class Main:
 
     @admiralty.command('archive')
     @click.option('--url', '-u', required=True, type=str)
+    @click.option('--type', '-t', required=True, type=str)
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
-    @click.option('--type', '-t', required=True, type=str)
-    def archive(url: str, s3: bool, save: bool, type: str):
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    def archive(url: str, s3: bool, save: bool, type: str, thread: bool):
         start = perf_counter()
 
-        arch = Archive(url=url, s3=s3, save=save, types=type)
+        arch = Archive(url=url, s3=s3, save=save, types=type, threads=thread)
         arch.main()
 
         Runtime.end(start, perf_counter())

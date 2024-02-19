@@ -1,21 +1,26 @@
 import os
 import mimetypes
+import requests
 
 from typing import List, Dict, Tuple
 from requests import Response
 from icecream import ic
 from dotenv import load_dotenv
 
+from concurrent.futures import ThreadPoolExecutor, wait
 from ApiRetrys import ApiRetry
 from pyquery import PyQuery
 from components import ArchiveComponent
 from server.s3 import ConnectionS3
 from utils import *
+from dekimashita import Dekimashita
 
 class ArchiveLibs(ArchiveComponent):
-    def __init__(self, save: bool, s3: bool) -> None:
+    def __init__(self, save: bool, s3: bool, threads: bool) -> None:
         super().__init__()
         load_dotenv()
+
+        self.executor = ThreadPoolExecutor()
 
         self.api = ApiRetry(show_logs=True, defaulth_headers=True)
         self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
@@ -26,60 +31,99 @@ class ArchiveLibs(ArchiveComponent):
         self.bucket = os.getenv('BUCKET')
         self.SAVE_TO_LOKAL = save
         self.SAVE_TO_S3 = s3
+        self.USING_THREAD: bool = threads
+
+        self.temp_url = []
 
     def url_download_page(self, html: PyQuery) -> Tuple[str, any, None]:
-        id: str = html.find('meta[property="og:url"]').attr('content').split('/')[-1]
+        id: str = html.find('link[rel="canonical"]').attr('href').split('/')[-1]
 
         return (self.download_enpoint+id, id)
         ...
 
-    def collect_documents(self, url_page: str) -> List[Dict[str, str]]:
+    def collect_documents(self, url_page: str, documents: list = []) -> List[Dict[str, str]]:
         response: Response = self.api.get(url_page)
         html = PyQuery(response.text)
 
-        documents: List[dict] = []
+        documents: List[dict] = [*documents]
+
         for document in html.find('table[class="directory-listing-table"] tbody tr')[1:]:
+            
+            try:
+                
+                if PyQuery(document).find('td:first-child a').attr('href').endswith('/'):
+                    self.temp_url.append(url_page+'/'+PyQuery(document).find('td:first-child a').attr('href'))
+                    continue
+            
+            except Exception:
+                continue
+
             documents.append({
                 "title": PyQuery(document).find('td:first-child a').text(),
                 "url": url_page+'/'+PyQuery(document).find('td:first-child a').attr('href'),
                 "last_modified": PyQuery(document).find('td:nth-child(2)').text(),
                 "size": PyQuery(document).find('td:nth-child(3)').text(),
             })
-
+        
             ...
 
+        if self.temp_url:
+            for url_page in self.temp_url:
+                self.collect_documents(self.temp_url.pop(0), documents)
+
         return documents
+        ...
+    def action(self, components: Tuple) -> Dict[str, any]:
+
+        (document, headers) = components
+        response: Response = self.api.get(document["url"])
+
+        try:
+            extension: str = document["url"].split('.')[-1]
+        except Exception:
+            extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '')
+
+        path: str = create_dir(f'{self.base_path+headers["id"]}/{extension}/', create=self.SAVE_TO_LOKAL)
+        document.update({
+            "path_document": self.s3_path+path+document["title"]
+        })
+
+
+        if self.SAVE_TO_LOKAL:
+            Down.curlv2(path+document["title"].replace(' ', '_'), response)
+
+        if self.SAVE_TO_S3:
+            self.s3.upload_byte(
+                body=response.content,
+                bucket=self.bucket,
+                key=path+document["title"]
+            )
+
+        return document
+
         ...
 
     def download(self, headers: dict) -> Dict[str, any]:
 
         documents: List[str] = []
+        task_executor: List[str] = []
+
         for document in headers["documents"]:
             ic(document["url"])
-            response: Response = self.api.get(document["url"])
-
-            try:
-                extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '')
-            except Exception:
-                extension: str = document["url"].split('.')[-1]
-
-            path: str = create_dir(f'{self.base_path+headers["id"]}/{extension}/', create=self.SAVE_TO_LOKAL)
-            document.update({
-                "path_document": self.s3_path+path+document["title"]
-            })
-
-            documents.append(document)
-
-            if self.SAVE_TO_LOKAL:
-                Down.curlv2(path+document["title"], response)
-
-            if self.SAVE_TO_S3:
-                self.s3.upload_byte(
-                    body=response.content,
-                    bucket=self.bucket,
-                    key=path+document["title"]
-                )
+            components = (document, headers)
+            if self.USING_THREAD:
+                task_executor.append(self.executor.submit(self.action, components))
+            
+            else:
+                documents.append(self.action(components))
             ...
+        
+        if self.USING_THREAD:
+            wait(task_executor)
+            self.executor.shutdown(wait=True)
+
+            for task in task_executor:
+                documents.append(task.result())
 
         path_temp: str = f'{self.base_path+headers["id"]}/json/'
         path_temp: str = f'{create_dir(path_temp, create=self.SAVE_TO_LOKAL)}{headers["id"]}.json'
