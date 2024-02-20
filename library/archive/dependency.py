@@ -41,6 +41,18 @@ class ArchiveLibs(ArchiveComponent):
         return (self.download_enpoint+id, id)
         ...
 
+    def build_title(self, text: str, extension: str) -> str:
+        text: str = text.split('.')[0].lower()
+        text: str = text.replace(' ', '_')\
+                    .replace('\n', '')\
+                    .replace(',', '')\
+                    .replace('(', '')\
+                    .replace(')', '')
+        
+        if len(text) > 50: text: str = text[:50]
+        return f'{text}.{extension}'
+        ...
+
     def collect_documents(self, url_page: str, documents: list = []) -> List[Dict[str, str]]:
         response: Response = self.api.get(url_page)
         html = PyQuery(response.text)
@@ -50,7 +62,7 @@ class ArchiveLibs(ArchiveComponent):
         for document in html.find('table[class="directory-listing-table"] tbody tr')[1:]:
             
             try:
-                
+
                 if PyQuery(document).find('td:first-child a').attr('href').endswith('/'):
                     self.temp_url.append(url_page+'/'+PyQuery(document).find('td:first-child a').attr('href'))
                     continue
@@ -79,24 +91,26 @@ class ArchiveLibs(ArchiveComponent):
         response: Response = self.api.get(document["url"])
 
         try:
-            extension: str = document["url"].split('.')[-1]
+            extension: str = document["url"].split('.')[-1].lower()
         except Exception:
-            extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '')
+            extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '').lower()
 
         path: str = create_dir(f'{self.base_path+headers["id"]}/{extension}/', create=self.SAVE_TO_LOKAL)
+
         document.update({
-            "path_document": self.s3_path+path+document["title"]
+            "path_document": self.s3_path+path+self.build_title(document["title"], extension)
         })
 
-
         if self.SAVE_TO_LOKAL:
-            Down.curlv2(path+document["title"].replace(' ', '_'), response)
+            path_media: str = path+self.build_title(document["title"], extension)
+            Down.curlv2(path_media, response)
+            
 
         if self.SAVE_TO_S3:
             self.s3.upload_byte(
                 body=response.content,
                 bucket=self.bucket,
-                key=path+document["title"]
+                key=path+self.build_title(document["title"], extension)
             )
 
         return document
@@ -109,21 +123,25 @@ class ArchiveLibs(ArchiveComponent):
         task_executor: List[str] = []
 
         for document in headers["documents"]:
-            ic(document["url"])
             components = (document, headers)
+
             if self.USING_THREAD:
                 task_executor.append(self.executor.submit(self.action, components))
             
             else:
                 documents.append(self.action(components))
+
             ...
         
         if self.USING_THREAD:
+
             wait(task_executor)
             self.executor.shutdown(wait=True)
 
             for task in task_executor:
                 documents.append(task.result())
+            
+
 
         path_temp: str = f'{self.base_path+headers["id"]}/json/'
         path_temp: str = f'{create_dir(path_temp, create=self.SAVE_TO_LOKAL)}{headers["id"]}.json'

@@ -10,19 +10,31 @@ from concurrent.futures import ThreadPoolExecutor
 from dekimashita import Dekimashita
 from browser import SyncPlaywright, BrowserContext, Page
 from icecream import ic
+from dotenv import load_dotenv
 
+from server.s3 import ConnectionS3
 from components import FourSharedAsset
 from utils import *
 
 class FourSharedLibs(FourSharedAsset):
-    def __init__(self, save: bool) -> None:
+    def __init__(self, save: bool, s3: bool) -> None:
         super().__init__()
+        load_dotenv()
+
+        self.api = ApiRetry(show_logs=True, defaulth_headers=True)
+        self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
+                                 secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
+                                 endpoint_url=os.getenv('ENDPOINT'),
+                                 )
+
+        self.bucket = os.getenv('BUCKET')
 
         self.api = ApiRetry(show_logs=True)
         self.executor = ThreadPoolExecutor()
         self.browser: BrowserContext = SyncPlaywright.browser(headless=True)
 
         self.SAVE_TO_LOKAL = save
+        self.SAVE_TO_S3 = s3
 
         self.temp_path = None
 
@@ -59,7 +71,7 @@ class FourSharedLibs(FourSharedAsset):
             posted = (html.find('div[class="generalUsername clearFix"] > span').text() or html.find('span[class="jsUploadTime"]')).text()
             types = html.find('div.id3tag:first-child').text()
 
-            return (' '.join(size.split(' ')[1:]).strip(), posted.strip(), ' '.join(types.split(' ')[-1]).strip())
+            return (size.strip(), posted.strip(), ' '.join(types.split(' ')[-1]).strip())
         ...
 
     def create_dir(self, format: str, folder: str) -> str:
@@ -90,7 +102,7 @@ class FourSharedLibs(FourSharedAsset):
         url: str = html.find('#btnLink').attr('href')
         folder: str = html.find('a[class="gaClick hideLong"]').text()
 
-        ic(url)
+
         if not url:
             url = html.find('input[class="jsDLink"]').attr('value')
         
@@ -121,8 +133,19 @@ class FourSharedLibs(FourSharedAsset):
             "path_data_document": self.BASE_PATH+path_document
         })
         
-        with open(path_document, 'wb') as f:
-            f.write(response.content)
+
+        if self.SAVE_TO_LOKAL:
+            File.write_byte(
+                path=path_document,
+                media=response
+            )
+
+        if self.SAVE_TO_S3:
+            self.s3.upload_byte(
+                body=response.content,
+                bucket=self.bucket,
+                key=path_document
+            )
 
         return header
         ...

@@ -15,7 +15,7 @@ from utils import *
 
 class FourShared(FourSharedLibs):
     def __init__(self, **kwargs) -> None:
-        super().__init__(kwargs["save"])
+        super().__init__(kwargs["save"], kwargs["s3"])
 
         self.update_cookies()
 
@@ -41,11 +41,11 @@ class FourShared(FourSharedLibs):
 
 
         folder: str = (html.find('a[class="gaClick hideLong"]').text() or 
-                       self.temp_path or
-                       html.find('meta[property="og:title"]').attr('content').split(' ')[0])
+                       html.find('meta[property="og:title"]').attr('content').split(' ')[0] or
+                       self.temp_path)
 
         self.temp_path = folder
-        path: str = f'{self.create_dir(format="json", folder=folder.lower())}/{title.split(".")[0].replace(" ", "_")}.json'
+        path: str = f'{self.create_dir(format="json", folder=folder)}/{title.split(".")[0].replace(" ", "_")}.json'
 
         (size, posted, types) = self.extract_navbar(html)
 
@@ -78,9 +78,16 @@ class FourShared(FourSharedLibs):
                 "documents": name_documents
             })
 
+        headers = self.download(html=html, header=headers)
         if self.SAVE_TO_LOKAL:
-            headers = self.download(html=html, header=headers)
             File.write_json(path, Dekimashita.vdict(headers, '\n'))
+
+        if self.SAVE_TO_S3:
+            self.s3.upload(
+                key=path,
+                body=Dekimashita.vdict(headers, '\n'),
+                bucket=self.bucket
+            )
 
         if not item and name_documents and self.type_process == 'one':
 
@@ -96,6 +103,8 @@ class FourShared(FourSharedLibs):
                 ...
             
             wait(task_executors)
+
+        if self.type_process == 'bulk': return url
 
 
     def paged(self, url: str) -> None:
@@ -140,6 +149,16 @@ class FourShared(FourSharedLibs):
             case 'page':
                 self.paged(url=self.link)
                 ...
+            
+            case 'bulk':
+                urls: List[str] = File.read_list_json('database/json/foursharedTarget.json')
+
+                dones: List[str] = []
+                for url in urls:
+                    component = (url, 0)
+                    dones.append(self.extract(component))
+                    File.write_json('database/json/foursharedDone.json', dones)
+
         ...
 
         self.executor.shutdown(wait=True)

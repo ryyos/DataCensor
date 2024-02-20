@@ -41,6 +41,13 @@ class File:
             data = json.load(file)
         return data
         ...
+
+    @staticmethod
+    def read_list_json(path: str):
+        with open(path) as f:
+            data = f.read()
+        return json.loads(data)
+        ...
     
     @staticmethod
     def list_dir(path: str) -> List[str]:

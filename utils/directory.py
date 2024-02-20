@@ -1,5 +1,6 @@
 import os
 from dekimashita import Dekimashita
+from icecream import ic
 
 
 # def create_dir(headers: dict, website: str) -> str:
@@ -11,7 +12,7 @@ from dekimashita import Dekimashita
 def create_dir(paths: str, create: bool = True) -> str:
     try: 
         if create: os.makedirs(paths)
-    except Exception: ...
+    except Exception as err: ...
     finally: return paths
     ...
 
@@ -21,4 +22,3 @@ def convert_path(path: str) -> str:
     path[1] = 'data_clean'
     return '/'.join(path)
     ...
-

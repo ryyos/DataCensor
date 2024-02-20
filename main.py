@@ -100,7 +100,7 @@ class Main:
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
-    @click.option('--url', '-u', required=True, type=str)
+    @click.option('--url', '-u', required=False, type=str)
     @click.option('--type', '-t', required=True, type=str)
     def fourShared(s3: bool, save: bool, thread: bool, url: str, type: str):
         start = perf_counter()
