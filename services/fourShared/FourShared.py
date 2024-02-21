@@ -27,6 +27,7 @@ class FourShared(FourSharedLibs):
         self.link = kwargs["url"]
 
         self.temp_path = None
+        self.parent_path = None
 
 
     def extract(self, component: Tuple[str]) -> None:
@@ -40,11 +41,11 @@ class FourShared(FourSharedLibs):
                 html.find('div.file-name').text())
 
 
-        folder: str = (html.find('a[class="gaClick hideLong"]').text() or 
-                       html.find('meta[property="og:title"]').attr('content').split(' ')[0] or
-                       self.temp_path)
+        folder: str = (html.find('meta[property="og:title"]').attr('content').split('-')[0].strip())
 
-        self.temp_path = folder
+        if self.parent_path:
+            folder: str = self.parent_path
+
         path: str = f'{self.create_dir(format="json", folder=folder)}/{title.split(".")[0].replace(" ", "_")}.json'
 
         (size, posted, types) = self.extract_navbar(html)
@@ -73,12 +74,12 @@ class FourShared(FourSharedLibs):
             },
         }
 
-        if self.type_process == 'one' and name_documents:
+        if name_documents:
             headers.update({
                 "documents": name_documents
             })
 
-        headers = self.download(html=html, header=headers)
+        headers = self.download(html=html, header=headers, folder=folder)
         if self.SAVE_TO_LOKAL:
             File.write_json(path, Dekimashita.vdict(headers, '\n'))
 
@@ -89,7 +90,10 @@ class FourShared(FourSharedLibs):
                 bucket=self.bucket
             )
 
-        if not item and name_documents and self.type_process == 'one':
+        if not item and name_documents:
+            
+            self.parent_path = folder
+            ic(self.parent_path)
 
             task_executors = []
             for index, url in enumerate(url_documents):
@@ -104,7 +108,7 @@ class FourShared(FourSharedLibs):
             
             wait(task_executors)
 
-        if self.type_process == 'bulk': return url
+        return url
 
 
     def paged(self, url: str) -> None:
@@ -117,7 +121,6 @@ class FourShared(FourSharedLibs):
             for card in self.collect_card(html):
 
                 if '/folder/' in card:
-                    ic(card)
                     self.paged(card)
 
                 else:
@@ -155,6 +158,9 @@ class FourShared(FourSharedLibs):
 
                 dones: List[str] = []
                 for url in urls:
+
+                    self.parent_path = None
+
                     component = (url, 0)
                     dones.append(self.extract(component))
                     File.write_json('database/json/foursharedDone.json', dones)

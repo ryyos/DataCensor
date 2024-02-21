@@ -68,7 +68,7 @@ class FourSharedLibs(FourSharedAsset):
         
         except Exception:
             size = (html.find('div.id3tag:nth-child(2)').text() or html.find('span[class="jsFileSize"]').text())
-            posted = (html.find('div[class="generalUsername clearFix"] > span').text() or html.find('span[class="jsUploadTime"]')).text()
+            posted = (html.find('div[class="generalUsername clearFix"] > span').text() or html.find('span[class="jsUploadTime"]').text())
             types = html.find('div.id3tag:first-child').text()
 
             return (size.strip(), posted.strip(), ' '.join(types.split(' ')[-1]).strip())
@@ -97,19 +97,12 @@ class FourSharedLibs(FourSharedAsset):
         return (names, urls)
         ...
 
-    def download(self, html: PyQuery, header: Dict[str, any]) -> Dict[str, any]:
+    def download(self, html: PyQuery, header: Dict[str, any], folder: str) -> Dict[str, any]:
 
         url: str = html.find('#btnLink').attr('href')
-        folder: str = html.find('a[class="gaClick hideLong"]').text()
-
 
         if not url:
             url = html.find('input[class="jsDLink"]').attr('value')
-        
-        if not folder:
-            folder: str = self.temp_path
-
-        self.temp_path = folder
 
         ic(folder)
 
