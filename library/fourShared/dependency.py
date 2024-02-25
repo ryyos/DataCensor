@@ -104,12 +104,12 @@ class FourSharedLibs(FourSharedAsset):
         if not url:
             url = html.find('input[class="jsDLink"]').attr('value')
 
-        ic(folder)
-
         response = self.api.get(url)
         html = PyQuery(response.text)
 
         url_document: str = html.find('input[name="d3link"]').attr('value')
+        
+        ic(url_document)
         
         response = requests.get(url=url_document, 
                                 cookies=self.cookies, 
@@ -145,7 +145,7 @@ class FourSharedLibs(FourSharedAsset):
 
     def collect_card(self, html: PyQuery) -> Generator[str, any, None]:
 
-        for card in html.find('div[class="hideLong simpleTumbName"] a'):
+        for card in html.find('div[class="hideLong simpleTumbName"] a') or html.find('div[class="namePlus"] a')[1:]:
             yield PyQuery(card).attr('href')
 
         ...

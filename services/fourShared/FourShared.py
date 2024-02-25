@@ -43,6 +43,7 @@ class FourShared(FourSharedLibs):
 
         folder: str = (html.find('meta[property="og:title"]').attr('content').split('-')[0].strip())
 
+        ic(folder)
         if self.parent_path:
             folder: str = self.parent_path
 
@@ -74,12 +75,13 @@ class FourShared(FourSharedLibs):
             },
         }
 
-        if name_documents:
+        if name_documents and self.type_process != 'page':
             headers.update({
                 "documents": name_documents
             })
 
         headers = self.download(html=html, header=headers, folder=folder)
+
         if self.SAVE_TO_LOKAL:
             File.write_json(path, Dekimashita.vdict(headers, '\n'))
 
@@ -90,9 +92,15 @@ class FourShared(FourSharedLibs):
                 bucket=self.bucket
             )
 
-        if not item and name_documents:
+        if not item and self.type_process == 'page':
+            self.parent_path: str = folder
+            ic(self.parent_path)
+
+        if not item and name_documents and self.type_process != 'page':
             
             self.parent_path = folder
+            url_done: str = url
+
             ic(self.parent_path)
 
             task_executors = []
@@ -108,7 +116,7 @@ class FourShared(FourSharedLibs):
             
             wait(task_executors)
 
-        return url
+            return url_done
 
 
     def paged(self, url: str) -> None:
@@ -118,13 +126,13 @@ class FourShared(FourSharedLibs):
             html = PyQuery(response.text)
 
             task_executors = []
-            for card in self.collect_card(html):
+            for index, card in enumerate(self.collect_card(html)):
 
                 if '/folder/' in card:
                     self.paged(card)
 
                 else:
-                    component = (card, 0)
+                    component = (card, index)
 
                     if self.USING_THREADS:
                         task_executors.append(self.executor.submit(self.extract, component))
