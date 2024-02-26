@@ -117,7 +117,7 @@ class Gofood(GofoodLibs):
                 """
                 api_review = f'https://gofood.co.id/_next/data/{self.VERSION}/id{card}/reviews.json?id={card.split("/")[-1]}'
                 
-            
+                if self.check_dones(api_review): continue
                 try:
                     food_review = self.api.get(url=api_review, max_retries=30)
 
@@ -167,6 +167,7 @@ class Gofood(GofoodLibs):
 
                     header_required["tags"].append(self.DOMAIN)
                     self.__get_review(raw_json=header_required)
+                    
 
                 except Exception as err:
                     ic({
@@ -174,6 +175,10 @@ class Gofood(GofoodLibs):
                         "api_review": api_review,
                         "card": card
                     })
+
+                finally:
+                    self.add_dones(api_review)
+                    ...
                     
 
     def __extract_city(self, city: str) -> None:
@@ -194,6 +199,8 @@ class Gofood(GofoodLibs):
 
 
     def main(self) -> None:
+
+        ic(self.API_CITY)
 
         cities = self.collect_cities(self.API_CITY)
         for city in cities: # Mengambil Kota

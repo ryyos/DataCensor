@@ -13,6 +13,7 @@ from utils import *
 
 class GofoodLibs(GofoodComponent):
     def __init__(self, save: bool) -> None:
+        super().__init__()
         load_dotenv()
         
         self.api = ApiRetry(show_logs=True, handle_forbidden=True, redirect_url='https://gofood.co.id', defaulth_headers=True)
@@ -28,8 +29,22 @@ class GofoodLibs(GofoodComponent):
                             domain='gofood.co.id')
 
         self.SAVE_TO_LOKAL = save
+        self.dones: List[str] = File.read_list_json('database/json/gofoodDones.json')
         ...
 
+    def add_dones(self, url: str) -> None:
+        self.dones.append(url)
+        File.write_json('database/json/gofoodDones.json', self.dones)
+        ...
+
+    def check_dones(self, url: str) -> bool:
+        if url in self.dones:
+            ic(url)
+            self.dones.remove(url)
+            return True
+        
+        return False
+        ...
 
     def create_dir(self, raw_data: dict, create: bool) -> str:
         try: 
