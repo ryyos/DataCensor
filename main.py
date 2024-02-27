@@ -140,7 +140,7 @@ class Main:
     def archive(ctx: Context, url: str):
         start = perf_counter()
 
-        arch = Archive(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'], url=url, types=ctx.obj['type'])
+        arch = Archive(save=ctx.obj['save'], s3=ctx.obj['s3'], threads=ctx.obj['thread'], url=url, types=ctx.obj['type'])
         arch.main()
 
         Stream.end(start, perf_counter())

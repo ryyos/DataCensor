@@ -8,7 +8,7 @@ from components import codes
 from time import time
 
 from utils import *
-from .runtime import Stream
+from .stream import Stream
 class Logs:
     def __init__(self, domain: str, path_log: str, path_monitoring: str) -> None:
 

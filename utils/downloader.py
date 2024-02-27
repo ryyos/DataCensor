@@ -15,6 +15,7 @@ class Down:
     
     @staticmethod
     def curlv2(path: str, response: Response) -> Response:
+        create_dir(paths='/'.join(path.split('/')[:-1]))
         with open(path, 'wb') as f:
             f.write(response.content)
 

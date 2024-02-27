@@ -53,11 +53,12 @@ class ArchiveLibs(ArchiveComponent):
         return f'{text}.{extension}'
         ...
 
-    def collect_documents(self, url_page: str, documents: list = []) -> List[Dict[str, str]]:
+    def collect_documents(self, url_page: str, documents: List[Dict[str, str]] = []) -> List[Dict[str, str]]:
+
         response: Response = self.api.get(url_page, headers=self.headers, cookies=self.cookies)
         html = PyQuery(response.text)
 
-        documents: List[dict] = [*documents]
+        if documents: url_page: str = url_page[:-1]
 
         for document in html.find('table[class="directory-listing-table"] tbody tr')[1:]:
             
@@ -67,7 +68,8 @@ class ArchiveLibs(ArchiveComponent):
                     self.temp_url.append(url_page+'/'+PyQuery(document).find('td:first-child a').attr('href'))
                     continue
             
-            except Exception:
+            except Exception as err:
+                ic(err)
                 continue
 
             documents.append({
@@ -78,13 +80,13 @@ class ArchiveLibs(ArchiveComponent):
             })
         
             ...
-
         if self.temp_url:
             for url_page in self.temp_url:
                 self.collect_documents(self.temp_url.pop(0), documents)
 
         return documents
         ...
+        
     def action(self, components: Tuple) -> Dict[str, any]:
 
         (document, headers) = components
@@ -94,6 +96,7 @@ class ArchiveLibs(ArchiveComponent):
             extension: str = document["url"].split('.')[-1].lower()
         except Exception:
             extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '').lower()
+
 
         path: str = create_dir(f'{self.base_path+headers["id"]}/{extension}/', create=self.SAVE_TO_LOKAL)
         document.update({
