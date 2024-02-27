@@ -2,7 +2,7 @@ import os
 import mimetypes
 import requests
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Generator
 from requests import Response
 from icecream import ic
 from dotenv import load_dotenv
@@ -22,7 +22,7 @@ class ArchiveLibs(ArchiveComponent):
 
         self.executor = ThreadPoolExecutor()
 
-        self.api = ApiRetry(show_logs=True, defaulth_headers=True)
+        self.api = ApiRetry(show_logs=True, defaulth_headers=False)
         self.s3 = ConnectionS3(access_key_id=os.getenv('ACCESS_KEY_ID'),
                                  secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
                                  endpoint_url=os.getenv('ENDPOINT'),
@@ -96,7 +96,7 @@ class ArchiveLibs(ArchiveComponent):
             extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '').lower()
 
         path: str = create_dir(f'{self.base_path+headers["id"]}/{extension}/', create=self.SAVE_TO_LOKAL)
-
+        ic(path)
         document.update({
             "path_document": self.s3_path+path+self.build_title(document["title"], extension)
         })
@@ -136,12 +136,9 @@ class ArchiveLibs(ArchiveComponent):
         if self.USING_THREAD:
 
             wait(task_executor)
-            self.executor.shutdown(wait=True)
-
             for task in task_executor:
                 documents.append(task.result())
             
-
 
         path_temp: str = f'{self.base_path+headers["id"]}/json/'
         path_temp: str = f'{create_dir(path_temp, create=self.SAVE_TO_LOKAL)}{headers["id"]}.json'
@@ -152,4 +149,36 @@ class ArchiveLibs(ArchiveComponent):
         })
 
         return headers
+        ...
+
+    def update_param(self, page: int) -> Dict[str, str]:
+        self.params.update({
+            "page": str(page+1),
+            "client_url": self.client_url+str(page)
+        })
+
+        return self.params
+        ...
+
+    def collect_card(self, url: str) -> Generator[str, any, None]:
+        page = 0
+        while True:
+            response = self.api.get(
+                    'https://archive.org/services/search/beta/page_production/',
+                    params=self.update_param(page),
+                    cookies=self.cookies,
+                    headers=self.headers,
+                )
+
+            if response.status_code != 200: break
+            
+            for data in response.json()['response']['body']['hits']['hits']:
+                yield self.detail_endpoint+data['fields']['identifier']
+
+            page+=1
+            ...
+        ...
+
+    def get_name_page(self, url: str) -> str:
+        self.base_path = self.base_path+url.split('/')[4]+'/'
         ...

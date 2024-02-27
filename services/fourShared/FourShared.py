@@ -17,7 +17,7 @@ class FourShared(FourSharedLibs):
     def __init__(self, **kwargs) -> None:
         super().__init__(kwargs["save"], kwargs["s3"])
 
-        self.update_cookies()
+        # self.update_cookies()
 
         self.type_process = kwargs["type"]
         self.SAVE_TO_S3 = kwargs["s3"]
@@ -53,7 +53,7 @@ class FourShared(FourSharedLibs):
 
         name_documents = None
         try:
-            (name_documents, url_documents) = self.collect_document(html.find('#moreFilesIFrame').attr('src'))
+            if self.type_process != 'page': (name_documents, url_documents) = self.collect_document(html.find('#moreFilesIFrame').attr('src'))
         except Exception: ...
 
         headers = {
@@ -120,10 +120,16 @@ class FourShared(FourSharedLibs):
 
 
     def paged(self, url: str) -> None:
-
+        
+        dones: List[str] = []
         while True:
+
+            if url in dones: break
+            dones.append(url)
+
             response: Response = self.api.get(url=url, headers=self.headers, max_retries=30)
             html = PyQuery(response.text)
+
 
             task_executors = []
             for index, card in enumerate(self.collect_card(html)):
@@ -145,7 +151,7 @@ class FourShared(FourSharedLibs):
             wait(task_executors)
 
             if not html.find('a.pagerNext').attr('href'): break
-            url: str = self.main_url+html.find('a.pagerNext').attr('href')
+            url: str = self.next_page_url+html.find('a.pagerNext').attr('href')
 
         ...
         

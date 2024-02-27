@@ -39,7 +39,6 @@ class GofoodLibs(GofoodComponent):
 
     def check_dones(self, url: str) -> bool:
         if url in self.dones:
-            ic(url)
             self.dones.remove(url)
             return True
         

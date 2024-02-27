@@ -45,6 +45,7 @@ class FourSharedAsset:
 
         self.domain = 'www.4shared.com'
         self.main_url = 'https://www.4shared.com'
+        self.next_page_url = 'https://www.4shared.com/web/q'
         self.login = 'https://www.4shared.com/web/login?locale=in'
 
         self.EMAIL = 'swiperhat@tutanota.com'

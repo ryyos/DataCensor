@@ -1,5 +1,7 @@
 import os
 import click
+
+from click.core import Context
 from time import perf_counter
 from utils import Runtime
 
@@ -13,12 +15,26 @@ class Main:
     def task(): ...
     
     @task.group('reviews')
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    @click.pass_context
     @staticmethod
-    def reviews(): ...
+    def reviews(ctx: Context, **kwargs):
+        ctx.obj = kwargs
+        ...
 
     @task.group('admiralty')
+    @click.option('--s3', '-s3', is_flag=True, default=False)
+    @click.option('--thread', '-th',  is_flag=True, default=False)
+    @click.option('--save', '-sv',  is_flag=True, default=False)
+    @click.option('--url', '-u', required=False, type=str)
+    @click.option('--type', '-t', required=False, type=str)
+    @click.pass_context
     @staticmethod
-    def admiralty(): ...
+    def admiralty(ctx: Context, **kwargs):
+        ctx.obj = kwargs
+        ...
 
     @task.group('shared')
     @staticmethod
@@ -31,93 +47,77 @@ class Main:
     """ <----------------------[ REVIEWS ]-------------------------->"""
 
     @reviews.command('gofood')
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    def gofood(s3: bool, save: bool, thread: bool):
+    @click.pass_context
+    def gofood(ctx: Context):
         start = perf_counter()
 
-        sof = Gofood(save=save, s3=s3, thread=thread)
-        sof.main()
+        gof = Gofood(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
+        gof.main()
 
         Runtime.end(start, perf_counter())
 
 
     @reviews.command('softonic')
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    def softonic(s3: bool, save: bool, thread: bool):
+    @click.pass_context
+    def softonic(ctx: Context):
         start = perf_counter()
 
-        sof = Softonic(save=save, s3=s3, thread=thread)
+        sof = Softonic(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         sof.main()
 
         Runtime.end(start, perf_counter())
 
 
     @reviews.command('appsapk')
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    def appsapk(s3: bool, save: bool, thread: bool):
+    @click.pass_context
+    def appsapk(ctx: Context):
         start = perf_counter()
 
-        sof = AppsApk(save=save, s3=s3, thread=thread)
-        sof.main()
+        app = AppsApk(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
+        app.main()
 
         Runtime.end(start, perf_counter())
 
 
     @reviews.command('uptodown')
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    def uptodown(s3: bool, save: bool, thread: bool):
+    @click.pass_context
+    def uptodown(ctx: Context):
         start = perf_counter()
 
-        sof = Uptodown(save=save, s3=s3, thread=thread)
-        sof.main()
+        up = Uptodown(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
+        up.main()
 
         Runtime.end(start, perf_counter())
 
 
     @reviews.command('mister_aladin')
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    def mister_aladin(s3: bool, save: bool, thread: bool):
+    @click.pass_context
+    def mister_aladin(ctx: Context):
         start = perf_counter()
 
-        sof = MisterAladin(save=save, s3=s3, thread=thread)
-        sof.main()
+        mis = MisterAladin(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
+        mis.main()
 
         Runtime.end(start, perf_counter())
 
     """ <----------------------[ ADMIRALTY ]-------------------------->"""
 
     @admiralty.command('4shared')
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    @click.option('--url', '-u', required=False, type=str)
-    @click.option('--type', '-t', required=True, type=str)
-    def fourShared(s3: bool, save: bool, thread: bool, url: str, type: str):
+    @click.pass_context
+    def fourShared(ctx: Context):
         start = perf_counter()
 
-        sof = FourShared(save=save, s3=s3, thread=thread, url=url, type=type)
+        sof = FourShared(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'], url=ctx.obj['url'], type=ctx.obj['type'])
         sof.main()
 
         Runtime.end(start, perf_counter())
 
     @admiralty.command('jihadimalmo')
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    def jihadimalmo(s3: bool, save: bool, thread: bool):
+    @click.pass_context
+    def jihadimalmo(ctx: Context):
         start = perf_counter()
 
-        sof = Jihadimalmo(save=save, s3=s3, thread=thread)
+        sof = Jihadimalmo(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         sof.main()
 
         Runtime.end(start, perf_counter())
@@ -174,12 +174,10 @@ class Main:
         Runtime.end(start, perf_counter())
 
     @shared.command('kafka')
-    @click.option('--source', '-sc', required=True, type=str)
-    @click.option('--topic', '-t', required=True, type=str)
-    def share(source: str, topic: str):
+    def share():
         start = perf_counter()
 
-        share = ShareKafka(base_path=source, topic=topic)
+        share = ShareKafka()
         share.main()
 
         Runtime.end(start, perf_counter())
@@ -215,7 +213,6 @@ class Main:
 
 
 if __name__=='__main__':
-   main = Main()
-   main.task()
+   Main.task()
    ...
     

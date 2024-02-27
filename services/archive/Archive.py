@@ -56,4 +56,11 @@ class Archive(ArchiveLibs):
                 self.book(self.target_url)
                 ...
 
+            case 'page':
+                self.get_name_page(self.target_url)
+                for card in self.collect_card(self.target_url):
+                    self.book(card)
+                ...
+                
+        self.executor.shutdown(wait=True)
         ...

@@ -200,8 +200,6 @@ class Gofood(GofoodLibs):
 
     def main(self) -> None:
 
-        ic(self.API_CITY)
-
         cities = self.collect_cities(self.API_CITY)
         for city in cities: # Mengambil Kota
             self.__extract_city(city)

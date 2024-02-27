@@ -25,7 +25,7 @@ class TheReligionOfPeace(TheReligionOfPeaceLibs):
             "topic_kafka": self.topic,
             "crawling_time": now(),
             "crawling_time_epoch": epoch(),
-            "title": html.find('h2[class="h3-DarkSlate"]').text(),
+            "title": html.find('h2[class="h3-DarkSlate"]').text().replace('\n', ''),
             "year": self.to_int(year),
             "url_media": [self.base_url+PyQuery(img).attr('src').replace('\\', '/') for img in html.find('table[class="quran-table"] img')],
             "descriptions": self.filter(html),

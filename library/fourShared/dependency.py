@@ -145,7 +145,7 @@ class FourSharedLibs(FourSharedAsset):
 
     def collect_card(self, html: PyQuery) -> Generator[str, any, None]:
 
-        for card in html.find('div[class="hideLong simpleTumbName"] a') or html.find('div[class="namePlus"] a')[1:]:
+        for card in html.find('div[class="hideLong simpleTumbName"] a') or html.find('a[target="_top"]')[1:] or html.find('div[class="namePlus"] a')[1:]:
             yield PyQuery(card).attr('href')
 
         ...

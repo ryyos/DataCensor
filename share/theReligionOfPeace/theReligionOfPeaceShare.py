@@ -10,18 +10,17 @@ from utils import *
 
 # Stable
 class TheReligionOfPeaceShare(TheReligionOfPeaceLibs):
-    def __init__(self, base_path: str, topic: str) -> None:
+    def __init__(self) -> None:
         super().__init__()
         load_dotenv()
 
-        self.base_path = base_path
-        self.kafka = Kafkaa(topic=topic)
+        self.kafka = Kafkaa(topic=self.topic)
         ...
 
     def main(self):
         (_, send) = self.read_database()
 
-        for root, dirs, files in os.walk(self.base_path):
+        for root, dirs, files in os.walk(self.path_stream):
             for file in files:
                 file_path = os.path.join(root, file).replace('\\', '/')
                 
