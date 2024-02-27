@@ -44,7 +44,7 @@ class TheReligionOfPeace(TheReligionOfPeaceLibs):
         if results["table"]:
             File.write_json(path, results)
 
-        Runtime.found(
+        Stream.found(
             process='STREAM',
             message='DATA FOUND',
             total=len(results["table"])

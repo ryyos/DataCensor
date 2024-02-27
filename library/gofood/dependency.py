@@ -127,7 +127,7 @@ class GofoodLibs(GofoodComponent):
             cards.extend(card)
 
             
-            Runtime.cards(restaurant, 'card', page_token, len(cards))
+            Stream.cards(restaurant, 'card', page_token, len(cards))
 
             try:
                 page_token = response.json()["nextPageToken"]
@@ -156,7 +156,7 @@ class GofoodLibs(GofoodComponent):
                 reviews = response.json()["data"]
                 for review in reviews: all_reviews.append(review)
 
-                Runtime.cards(uid, 'review', page_review, len(all_reviews))
+                Stream.cards(uid, 'review', page_review, len(all_reviews))
 
                 page = response.json().get("next_page", None)
                 if page:

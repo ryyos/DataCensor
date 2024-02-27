@@ -14,7 +14,7 @@ for existing_handler in logger.handlers[:]:
 
 logger.addHandler(console)
 
-class Runtime:
+class Stream:
 
        @staticmethod
        def info(name: str, total: int, success: int, error: int) -> None:

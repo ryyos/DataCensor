@@ -27,7 +27,7 @@ class Share:
             for file in files:
                 file_path = os.path.join(root, file).replace('\\', '/')
                 
-                Runtime.share(file_path)
+                Stream.share(file_path)
 
                 self.s3.upload_file(
                     path=file_path,

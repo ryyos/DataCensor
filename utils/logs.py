@@ -8,7 +8,7 @@ from components import codes
 from time import time
 
 from utils import *
-from .runtime import Runtime
+from .runtime import Stream
 class Logs:
     def __init__(self, domain: str, path_log: str, path_monitoring: str) -> None:
 
@@ -69,7 +69,7 @@ class Logs:
             "assign": "Rio"
         }
 
-        Runtime.info(sub_source, total, success, failed)
+        Stream.info(sub_source, total, success, failed)
 
         for index, data in enumerate(self.__monitorings):
             if id_product == data["id_sub_source"]:

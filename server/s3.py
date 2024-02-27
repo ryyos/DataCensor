@@ -6,7 +6,7 @@ from botocore.config import Config
 from dotenv import *
 from json import dumps
 from icecream import ic
-from utils import Runtime
+from utils import Stream
 
 class ConnectionS3:
     def __init__(self, access_key_id, secret_access_key, endpoint_url) -> None:
@@ -25,7 +25,7 @@ class ConnectionS3:
     def upload(self, key: str, body: dict, bucket: str) -> int:
         response: dict = self.__s3.put_object(Bucket=bucket, Key=key, Body=dumps(body, indent=2, ensure_ascii=False))
         
-        Runtime.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
+        Stream.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
         return response['ResponseMetadata']['HTTPStatusCode']
 
     
@@ -35,7 +35,7 @@ class ConnectionS3:
                                 Key = key, 
                                 Body = open(path, 'rb')
                             )
-        Runtime.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
+        Stream.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
         return response['ResponseMetadata']['HTTPStatusCode']
         ...
 
@@ -45,7 +45,7 @@ class ConnectionS3:
                                 Key = key, 
                                 Body = body
                             )
-        Runtime.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
+        Stream.s3(bucket, response['ResponseMetadata']['HTTPStatusCode'])
     
 
 

@@ -5,7 +5,7 @@ from icecream import ic
 
 from dotenv import load_dotenv
 from server.kafkaa import Kafkaa
-from utils import Runtime, File
+from utils import Stream, File
 
 class ShareKafka:
     def __init__(self, base_path: str, topic: str) -> None:
@@ -23,7 +23,7 @@ class ShareKafka:
                 if file.endswith('json'):
                     file_path = os.path.join(root, file).replace('\\', '/')
                     
-                    Runtime.shareKafka(file_path)
+                    Stream.shareKafka(file_path)
 
                     data: dict = File.read_json(file_path)
                     self.kafka.send(data)

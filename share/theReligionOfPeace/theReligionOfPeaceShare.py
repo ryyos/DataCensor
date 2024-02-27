@@ -27,7 +27,7 @@ class TheReligionOfPeaceShare(TheReligionOfPeaceLibs):
                 file: int = int(file.split('.')[0])
 
                 if file > int(send):
-                    Runtime.shareKafka(file_path)
+                    Stream.shareKafka(file_path)
                     data: dict = File.read_json(file_path)
                     self.kafka.send(data)
                     ...

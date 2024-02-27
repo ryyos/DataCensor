@@ -57,7 +57,7 @@ class DownloadLibs:
             self.sqlite.connection.commit()
             self.sqlite.connection.close()
 
-            Runtime.sql_domain(domain, path)
+            Stream.sql_domain(domain, path)
             return path
 
         

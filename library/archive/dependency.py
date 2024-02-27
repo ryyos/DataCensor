@@ -28,12 +28,12 @@ class ArchiveLibs(ArchiveComponent):
                                  endpoint_url=os.getenv('ENDPOINT'),
                                  )
 
-        self.bucket = os.getenv('BUCKET')
-        self.SAVE_TO_LOKAL = save
-        self.SAVE_TO_S3 = s3
+        self.bucket: str = os.getenv('BUCKET')
+        self.SAVE_TO_LOKAL: bool = save
+        self.SAVE_TO_S3: bool = s3
         self.USING_THREAD: bool = threads
 
-        self.temp_url = []
+        self.temp_url: List[str] = []
 
     def url_download_page(self, html: PyQuery) -> Tuple[str, any, None]:
         id: str = html.find('link[rel="canonical"]').attr('href').split('/')[-1]
@@ -54,7 +54,7 @@ class ArchiveLibs(ArchiveComponent):
         ...
 
     def collect_documents(self, url_page: str, documents: list = []) -> List[Dict[str, str]]:
-        response: Response = self.api.get(url_page)
+        response: Response = self.api.get(url_page, headers=self.headers, cookies=self.cookies)
         html = PyQuery(response.text)
 
         documents: List[dict] = [*documents]
@@ -88,7 +88,7 @@ class ArchiveLibs(ArchiveComponent):
     def action(self, components: Tuple) -> Dict[str, any]:
 
         (document, headers) = components
-        response: Response = self.api.get(document["url"])
+        response: Response = self.api.get(document["url"], headers=self.headers, cookies=self.cookies)
 
         try:
             extension: str = document["url"].split('.')[-1].lower()
@@ -96,7 +96,6 @@ class ArchiveLibs(ArchiveComponent):
             extension: str = mimetypes.guess_extension(response.headers.get('Content-Type')).replace('.', '').lower()
 
         path: str = create_dir(f'{self.base_path+headers["id"]}/{extension}/', create=self.SAVE_TO_LOKAL)
-        ic(path)
         document.update({
             "path_document": self.s3_path+path+self.build_title(document["title"], extension)
         })

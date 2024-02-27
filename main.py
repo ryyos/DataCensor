@@ -3,7 +3,7 @@ import click
 
 from click.core import Context
 from time import perf_counter
-from utils import Runtime
+from utils import Stream
 
 from services import *
 from share import *
@@ -28,7 +28,6 @@ class Main:
     @click.option('--s3', '-s3', is_flag=True, default=False)
     @click.option('--thread', '-th',  is_flag=True, default=False)
     @click.option('--save', '-sv',  is_flag=True, default=False)
-    @click.option('--url', '-u', required=False, type=str)
     @click.option('--type', '-t', required=False, type=str)
     @click.pass_context
     @staticmethod
@@ -54,7 +53,7 @@ class Main:
         gof = Gofood(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         gof.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
 
     @reviews.command('softonic')
@@ -65,7 +64,7 @@ class Main:
         sof = Softonic(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         sof.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
 
     @reviews.command('appsapk')
@@ -76,7 +75,7 @@ class Main:
         app = AppsApk(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         app.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
 
     @reviews.command('uptodown')
@@ -87,7 +86,7 @@ class Main:
         up = Uptodown(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         up.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
 
     @reviews.command('mister_aladin')
@@ -98,19 +97,20 @@ class Main:
         mis = MisterAladin(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         mis.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
     """ <----------------------[ ADMIRALTY ]-------------------------->"""
 
     @admiralty.command('4shared')
+    @click.option('--url', '-u', required=False, type=str)
     @click.pass_context
-    def fourShared(ctx: Context):
+    def fourShared(ctx: Context, url: str):
         start = perf_counter()
 
-        sof = FourShared(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'], url=ctx.obj['url'], type=ctx.obj['type'])
+        sof = FourShared(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'], url=url, type=ctx.obj['type'])
         sof.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
     @admiralty.command('jihadimalmo')
     @click.pass_context
@@ -120,7 +120,7 @@ class Main:
         sof = Jihadimalmo(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'])
         sof.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
 
     @admiralty.command('trop')
@@ -131,22 +131,19 @@ class Main:
         trop = TheReligionOfPeace(all=all)
         trop.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
 
     @admiralty.command('archive')
     @click.option('--url', '-u', required=True, type=str)
-    @click.option('--type', '-t', required=True, type=str)
-    @click.option('--s3', '-s3', is_flag=True, default=False)
-    @click.option('--save', '-sv',  is_flag=True, default=False)
-    @click.option('--thread', '-th',  is_flag=True, default=False)
-    def archive(url: str, s3: bool, save: bool, type: str, thread: bool):
+    @click.pass_context
+    def archive(ctx: Context, url: str):
         start = perf_counter()
 
-        arch = Archive(url=url, s3=s3, save=save, types=type, threads=thread)
+        arch = Archive(save=ctx.obj['save'], s3=ctx.obj['s3'], thread=ctx.obj['thread'], url=url, types=ctx.obj['type'])
         arch.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
@@ -161,7 +158,7 @@ class Main:
         share = ShareV2()
         share.main(source=source, change_path=change, new_path=new_path, start_main_path=start_path)
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
     @shared.command('s3')
     @click.option('--source', '-sc', required=True, type=str)
@@ -171,7 +168,7 @@ class Main:
         share = Share(base_path=source)
         share.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
     @shared.command('kafka')
     def share():
@@ -180,7 +177,7 @@ class Main:
         share = ShareKafka()
         share.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
     @shared.command('trop')
     @click.option('--source', '-sc', required=True, type=str)
@@ -191,7 +188,7 @@ class Main:
         share = TheReligionOfPeaceShare(base_path=source, topic=topic)
         share.main()
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
 
     """ <----------------------[ INSTAN DOWNLOAD ]-------------------------->"""
 
@@ -207,7 +204,7 @@ class Main:
         down = Download(save=save, s3=s3)
         down.main(url=url, domain=domain, path=path)
 
-        Runtime.end(start, perf_counter())
+        Stream.end(start, perf_counter())
         ...
 
 

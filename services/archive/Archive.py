@@ -16,7 +16,7 @@ class Archive(ArchiveLibs):
         self.target_url: str = url
         self.type: str = types
 
-    def book(self, url: str) -> None:
+    def extract(self, url: str) -> None:
         response: Response = self.api.get(url)
         html = PyQuery(response.text)
 
@@ -52,15 +52,15 @@ class Archive(ArchiveLibs):
     def main(self) -> None:
 
         match self.type:
-            case 'book':
-                self.book(self.target_url)
+            case 'one':
+                self.extract(self.target_url)
                 ...
 
             case 'page':
                 self.get_name_page(self.target_url)
                 for card in self.collect_card(self.target_url):
-                    self.book(card)
+                    self.extract(card)
                 ...
-                
+
         self.executor.shutdown(wait=True)
         ...
