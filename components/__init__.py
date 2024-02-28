@@ -10,3 +10,4 @@ from .theReligionOfPeace.component import TheReligionOfPeaceComponent
 from .archive.component import ArchiveComponent
 from .bri.component import BriComponent
 from .bankmandiri.component import BankmandiriComponent
+from .btn.component import BtnComponent

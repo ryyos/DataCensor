@@ -11,3 +11,4 @@ from .theReligionOfPeace.dependency import TheReligionOfPeaceLibs
 from .archive.dependency import ArchiveLibs
 from .bri.dependency import BriLibs
 from .bankmandiri.dependency import BankmandiriLibs
+from .btn.dependency import BtnLibs

@@ -163,6 +163,15 @@ class Main:
 
         Stream.end(start, perf_counter())
 
+
+    @admiralty.command('btn')
+    def btn():
+        start = perf_counter()
+
+        bt = Btn()
+        bt.main()
+
+        Stream.end(start, perf_counter())
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
     @shared.command('s3v2')
