@@ -9,3 +9,4 @@ from .download.dependency import DownloadLibs
 from .jihadimalmo.dependency import JihadimalmoLibs
 from .theReligionOfPeace.dependency import TheReligionOfPeaceLibs
 from .archive.dependency import ArchiveLibs
+from .bri.dependency import BriLibs

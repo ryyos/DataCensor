@@ -9,3 +9,4 @@ from .download.Download import Download
 from .jihadimalmo.Jihadimalmo import Jihadimalmo
 from .theReligionOfPeace.TheReligionOfPeace import TheReligionOfPeace
 from .archive.Archive import Archive
+from .bri.Bri import Bri

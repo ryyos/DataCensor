@@ -145,6 +145,15 @@ class Main:
 
         Stream.end(start, perf_counter())
 
+    @admiralty.command('bri')
+    def bri():
+        start = perf_counter()
+
+        bri = Bri()
+        bri.main()
+
+        Stream.end(start, perf_counter())
+
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
     @shared.command('s3v2')
