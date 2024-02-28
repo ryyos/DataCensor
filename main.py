@@ -154,6 +154,15 @@ class Main:
 
         Stream.end(start, perf_counter())
 
+    @admiralty.command('mandiri')
+    def maindiri():
+        start = perf_counter()
+
+        maindiri = Bankmandiri()
+        maindiri.main()
+
+        Stream.end(start, perf_counter())
+
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
     @shared.command('s3v2')
