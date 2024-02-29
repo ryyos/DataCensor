@@ -182,6 +182,15 @@ class Main:
 
         Stream.end(start, perf_counter())
 
+    @admiralty.command('permata')
+    def danamon():
+        start = perf_counter()
+
+        permata = Permata()
+        permata.main()
+
+        Stream.end(start, perf_counter())
+
 
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
