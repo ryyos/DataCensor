@@ -172,6 +172,17 @@ class Main:
         bt.main()
 
         Stream.end(start, perf_counter())
+
+    @admiralty.command('danamon')
+    def danamon():
+        start = perf_counter()
+
+        danamon = Danamon()
+        danamon.main()
+
+        Stream.end(start, perf_counter())
+
+
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
     @shared.command('s3v2')

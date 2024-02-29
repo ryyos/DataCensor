@@ -12,3 +12,4 @@ from .archive.Archive import Archive
 from .bri.Bri import Bri
 from .bankmandiri.Bankmandiri import Bankmandiri
 from .btn.Btn import Btn
+from .danamon.Danamon import Danamon
