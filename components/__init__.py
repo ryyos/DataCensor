@@ -13,3 +13,4 @@ from .bankmandiri.component import BankmandiriComponent
 from .btn.component import BtnComponent
 from .danamon.component import DanamonComponent
 from .permata.component import PermataComponent
+from .bca.component import BcaComponent

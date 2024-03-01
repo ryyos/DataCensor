@@ -14,3 +14,4 @@ from .bankmandiri.dependency import BankmandiriLibs
 from .btn.dependency import BtnLibs
 from .danamon.dependency import DanamonLibs
 from .permata.dependency import PermataLibs
+from .bca.dependency import BcaLibs
