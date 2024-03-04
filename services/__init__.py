@@ -14,3 +14,4 @@ from .bankmandiri.Bankmandiri import Bankmandiri
 from .btn.Btn import Btn
 from .danamon.Danamon import Danamon
 from .permata.Permata import Permata
+from .bca.Bca import Bca

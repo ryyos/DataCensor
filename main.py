@@ -191,6 +191,15 @@ class Main:
 
         Stream.end(start, perf_counter())
 
+    @admiralty.command('bca')
+    def bca():
+        start = perf_counter()
+
+        bca = Bca()
+        bca.main()
+
+        Stream.end(start, perf_counter())
+
 
     """ <----------------------[ SHARE FROM LOCAL ]-------------------------->"""
 
